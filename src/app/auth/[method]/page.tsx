@@ -1,22 +1,28 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaGithub, FaEye, FaEyeSlash, FaArrowLeft, FaEnvelope, FaLock, FaUser } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type AuthMode = "login" | "register" | "forgot";
 
-export default function AuthPage() {
-  const [mode, setMode] = useState<AuthMode>("login");
+export default function AuthPage({params}: {params: {method: AuthMode}}) {
+  // Getting the method from URL params (e.g., /auth/login)
+  const {method} = use(params);
+  const [mode, setMode] = useState<AuthMode>(method);
+  const router = useRouter();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [isLoading, setIsLoading] = useState(false);
 
   // Switch modes and clear errors
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
+    router.replace(`/auth/${newMode}`); // Clear URL query params if any
     reset();
   };
 
@@ -35,7 +41,7 @@ export default function AuthPage() {
 
   const handleSocialLogin = async (provider: string) => {
     setIsLoading(true);
-    await signIn(provider, { callbackUrl: "/dashboard" });
+    // await signIn(provider, { callbackUrl: "/dashboard" });
   };
 
   // --- Animation Variants ---
@@ -180,7 +186,7 @@ export default function AuthPage() {
         <div className="mt-8 text-center text-sm font-medium text-slate-500">
           {mode === "login" ? (
             <>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button onClick={() => switchMode("register")} className="text-blue-600 hover:underline">Sign up</button>
             </>
           ) : mode === "register" ? (
