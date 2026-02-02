@@ -9,6 +9,8 @@ export interface IUser extends Document {
   role: UserRole;
   createdAt: Date;
   updatedAt: Date;
+  resetOtp?: string;
+  resetOtpExpires?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -39,6 +41,14 @@ const UserSchema = new Schema<IUser, UserModel>(
       enum: ["candidate", "recruiter"],
       default: "candidate",
       required: true,
+    },
+    resetOtp: {
+      type: String,
+      required: false,
+    },
+    resetOtpExpires: {
+      type: Date,
+      required: false,
     },
   },
   {

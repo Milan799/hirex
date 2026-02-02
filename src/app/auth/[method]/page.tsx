@@ -27,6 +27,7 @@ type AuthFormValues = {
   password: string;
   confirmPassword?: string;
   role: "candidate" | "recruiter";
+  otp?: string;
 };
 
 export default function AuthPage({ params }: { params: Promise<{ method: string }> }) {
@@ -34,6 +35,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   const method = (unwrappedParams.method as AuthMode) || "login"; 
 
   const [mode, setMode] = useState<AuthMode>(method);
+  const [otpStep, setOtpStep] = useState<"request" | "reset">("request");
   const router = useRouter();
   const {
     register,
@@ -54,6 +56,11 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   // NEXT_PUBLIC_API_URL can be "http://localhost:5000" or "http://localhost:5000/api/auth"
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
   const getEndpoint = (path: string) => {
+    // Always use Next.js route for OTP so Mongo + nodemailer logic is used
+    if (path === "request-otp") {
+      return "/api/request-otp";
+    }
+
     if (!API_BASE) return `/api/${path}`;
     const base = API_BASE.replace(/\/$/, "");
     const authBase = base.endsWith("/api/auth") ? base : `${base}/api/auth`;
@@ -66,6 +73,9 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
 
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
+    if (newMode !== "forgot") {
+      setOtpStep("request");
+    }
     router.replace(`/auth/${newMode}`);
     reset();
   };
@@ -94,8 +104,17 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           role: data.role || "candidate",
         };
       } else if (mode === "forgot") {
-        endpoint = getEndpoint("request-otp");
-        payload = { email: data.email };
+        if (otpStep === "request") {
+          endpoint = getEndpoint("request-otp");
+          payload = { email: data.email };
+        } else {
+          endpoint = "/api/reset-password";
+          payload = {
+            email: data.email,
+            otp: data.otp,
+            password: data.password,
+          };
+        }
       }
 
       // 2. Call the API
@@ -140,7 +159,14 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
         router.push("/dashboard");
         router.refresh();
       } else if (mode === "forgot") {
-        alert("OTP sent to your email!");
+        if (otpStep === "request") {
+          alert("OTP sent to your email! Enter the code and new password.");
+          setOtpStep("reset");
+        } else {
+          alert("Password reset successfully! Please log in.");
+          setOtpStep("request");
+          switchMode("login");
+        }
       }
 
     } catch (error: any) {
@@ -218,7 +244,10 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           <p className="mt-2 text-sm text-slate-400">
             {mode === "login" && "Enter your credentials to access your account."}
             {mode === "register" && "Start your journey with HireX today."}
-            {mode === "forgot" && "We'll send you an OTP to reset it."}
+            {mode === "forgot" &&
+              (otpStep === "request"
+                ? "We'll send you a one-time code to reset your password."
+                : "Enter the code from your email and choose a new password.")}
           </p>
         </div>
 
@@ -270,11 +299,11 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             />
 
             {/* Password */}
-            {mode !== "forgot" && (
+            {(mode !== "forgot" || otpStep === "reset") && (
               <InputGroup
                 icon={<FaLock className="text-slate-500" />}
                 type="password"
-                placeholder="Password"
+                placeholder={mode === "forgot" ? "New Password" : "Password"}
                 name="password"
                 register={register}
                 validationRules={{
@@ -287,11 +316,11 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             )}
 
             {/* Confirm Password */}
-            {mode === "register" && (
+            {(mode === "register" || (mode === "forgot" && otpStep === "reset")) && (
               <InputGroup
                 icon={<FaCheckCircle className="text-slate-500" />}
                 type="password"
-                placeholder="Confirm Password"
+                placeholder={mode === "forgot" ? "Confirm New Password" : "Confirm Password"}
                 name="confirmPassword"
                 register={register}
                 isPassword
@@ -304,6 +333,22 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
                   },
                 }}
                 error={errors.confirmPassword}
+              />
+            )}
+
+            {/* OTP Code for reset step */}
+            {mode === "forgot" && otpStep === "reset" && (
+              <InputGroup
+                icon={<FaCheckCircle className="text-slate-500" />}
+                type="text"
+                placeholder="6-digit code"
+                name="otp"
+                register={register}
+                validationRules={{
+                  required: "OTP code is required",
+                  minLength: { value: 4, message: "Code seems too short" },
+                }}
+                error={errors.otp}
               />
             )}
 
@@ -337,7 +382,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               ) : mode === "register" ? (
                 "Sign Up"
               ) : (
-                "Send OTP"
+                otpStep === "request" ? "Send OTP" : "Reset Password"
               )}
             </motion.button>
           </motion.form>
