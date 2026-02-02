@@ -4,8 +4,12 @@ import axios from "axios";
 import { attachAbortController, clearAbortController } from "./abortManager";
 import { handleLogout } from "./logout";
 
+// Base URL only (e.g. http://localhost:5000) for /api/* routes; strip /api/auth if present
+const raw = process.env.NEXT_PUBLIC_API_URL || "";
+const baseURL = raw.replace(/\/api\/auth\/?$/, "") || raw;
+
 const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL,
   withCredentials: true,
   timeout: 20000,
 });

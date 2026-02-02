@@ -1,28 +1,30 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
 import axiosClient from "@/lib/axios/axiosClientInstance";
 
+// ─── Async thunk: Axios call happens HERE, result goes into Redux state ───
 export const fetchProfile = createAsyncThunk(
   "user/profile",
-  async ({payload, onSuccess,onError}, { rejectWithValue }) => {
+  async (payload: Record<string, unknown> = {}, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.get("/posts",{ params: payload});
-      onSuccess(res.data);
+      const res = await axiosClient.get("/api/posts", { params: payload });
       return res.data;
-    } catch (err: any) {
-      if (err.message === "UNAUTHORIZED") {
+    } catch (err: unknown) {
+      const error = err as { message?: string; response?: { data?: unknown } };
+      if (error.message === "UNAUTHORIZED") {
         return rejectWithValue("Session expired");
       }
-      onError(err);
-      return rejectWithValue(err.response?.data);
+      return rejectWithValue(error.response?.data ?? "Request failed");
     }
   }
 );
 
-
+// ─── Slice: Redux state for user (data + status) ───
 const userSlice = createSlice({
   name: "user",
-  initialState: { data: null, status: "idle" },
+  initialState: {
+    data: null as unknown,
+    status: "idle" as "idle" | "loading" | "succeeded" | "failed",
+  },
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -33,7 +35,7 @@ const userSlice = createSlice({
         state.data = action.payload;
         state.status = "succeeded";
       })
-      .addCase(fetchProfile.rejected, (state, action) => {
+      .addCase(fetchProfile.rejected, (state) => {
         state.status = "failed";
       });
   },

@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HireX
 
-## Getting Started
+Job Hunting Platform — Next.js frontend with optional Express backend.
 
-First, run the development server:
+## Quick Start
+
+### Option 1: Next.js only (simplest)
+
+Uses built-in API routes. No separate server needed.
 
 ```bash
+cp .env.example .env
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). Auth (register/login) works via `/api/register` and `/api/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Option 2: With Express backend
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Uses Express for auth and `/api/posts`. Requires both servers.
+
+1. Copy env:
+   ```bash
+   cp .env.example .env
+   ```
+2. In `.env`, set:
+   ```
+   NEXT_PUBLIC_API_URL=http://localhost:5000
+   ```
+3. Install & run both:
+   ```bash
+   npm install
+   cd server && npm install && cd ..
+   npm run dev:all
+   ```
+
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend: [http://localhost:5000](http://localhost:5000)
+
+## Scripts
+
+| Command       | Description                    |
+|--------------|--------------------------------|
+| `npm run dev`| Next.js dev server             |
+| `npm run server` | Express backend (port 5000) |
+| `npm run dev:all` | Frontend + backend together |
+| `npm run build` | Build Next.js for production |
+| `npm run lint` | Run ESLint                    |
+
+## Project Structure
+
+```
+├── src/app/          # Next.js pages & API routes
+├── src/lib/          # Axios, Redux, utils
+├── server/           # Express backend (optional)
+└── docs/             # AXIOS-REDUX-FLOW.md
+```
+
+## Auth Flow
+
+- **Register / Login / Forgot password**: Form → `fetch()` → API
+- **Social (Google, GitHub)**: NextAuth OAuth
+- **Token**: Stored in `localStorage` when using Express backend
+
+## Troubleshooting
+
+**Auth errors with Express backend:**
+- Set `NEXT_PUBLIC_API_URL=http://localhost:5000` (base URL only, no `/api/auth`)
+- Restart Next.js after changing `.env` (required for `NEXT_PUBLIC_` vars)
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Docs](https://nextjs.org/docs)
+- [Axios ↔ Redux Flow](docs/AXIOS-REDUX-FLOW.md)

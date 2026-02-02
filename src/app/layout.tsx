@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ReduxProvider } from "@/lib/redux/provider";
-import { ThemeProvider } from "@/components/theme-provider"; // Import kiya
+import { SessionProvider } from "@/components/providers/SessionProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,19 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // 'suppressHydrationWarning' add karna zaroori hai
-    <html lang="en" suppressHydrationWarning> 
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-             <ReduxProvider>
-          {children}
-        </ReduxProvider>
-        </ThemeProvider>
+    <html lang="en" className="dark">
+      <body className={`${inter.className} bg-slate-950 text-slate-100 antialiased`}>
+        <SessionProvider>
+          <ReduxProvider>{children}</ReduxProvider>
+        </SessionProvider>
       </body>
     </html>
   );
