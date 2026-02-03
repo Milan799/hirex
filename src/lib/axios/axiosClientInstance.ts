@@ -28,6 +28,13 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Public auth endpoints: do NOT trigger logout on 401/403 (e.g. wrong OTP on reset-password)
+const isPublicAuthRequest = (url?: string) => {
+  if (!url) return false;
+  const path = typeof url === "string" ? url : (url as { pathname?: string }).pathname ?? "";
+  return /(\/|^)auth\/(login|register|request-otp|verify-otp|reset-password)/i.test(path);
+};
+
 // RESPONSE
 axiosClient.interceptors.response.use(
   (response) => {
@@ -41,8 +48,9 @@ axiosClient.interceptors.response.use(
     }
 
     const status = error.response?.status;
+    const requestUrl = error.config?.url ?? "";
 
-    if (status === 401 || status === 403) {
+    if ((status === 401 || status === 403) && !isPublicAuthRequest(requestUrl)) {
       handleLogout();
     }
 

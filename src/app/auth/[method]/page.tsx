@@ -18,6 +18,13 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import {
+  loginUser,
+  registerUser,
+  requestOtp,
+  resetPassword,
+} from "@/lib/redux/slices/userSlice";
+import { useAppDispatch } from "@/lib/redux/hooks";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -36,13 +43,16 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
 
   const [mode, setMode] = useState<AuthMode>(method);
   const [otpStep, setOtpStep] = useState<"request" | "reset">("request");
+  const [forgotEmail, setForgotEmail] = useState<string>("");
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const {
     register,
     handleSubmit,
     reset,
     watch,
     setError,
+    setValue,
     formState: { errors },
   } = useForm<AuthFormValues>({
     defaultValues: {
@@ -52,127 +62,107 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Use Express backend if configured, otherwise same-origin Next.js API routes
-  // NEXT_PUBLIC_API_URL can be "http://localhost:5000" or "http://localhost:5000/api/auth"
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
-  const getEndpoint = (path: string) => {
-    // Always use Next.js route for OTP so Mongo + nodemailer logic is used
-    if (path === "request-otp") {
-      return "/api/request-otp";
-    }
-
-    if (!API_BASE) return `/api/${path}`;
-    const base = API_BASE.replace(/\/$/, "");
-    const authBase = base.endsWith("/api/auth") ? base : `${base}/api/auth`;
-    return `${authBase}/${path}`;
-  };
-
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Keep email in sync on reset step so reset-password always has the right email
+  useEffect(() => {
+    if (mode === "forgot" && otpStep === "reset" && forgotEmail) {
+      setValue("email", forgotEmail);
+    }
+  }, [mode, otpStep, forgotEmail, setValue]);
 
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
     if (newMode !== "forgot") {
       setOtpStep("request");
+      setForgotEmail("");
     }
     router.replace(`/auth/${newMode}`);
     reset();
   };
 
-  const onSubmit = async (data: any) => {
+  const getErrorMessage = (err: unknown): string => {
+    if (typeof err === "string") return err;
+    const data = (err as Record<string, unknown>) ?? {};
+    const msg = data.message ?? data.msg ?? data.error;
+    return typeof msg === "string" ? msg : "Something went wrong. Please try again.";
+  };
+
+  const onSubmit = async (data: AuthFormValues) => {
     setIsLoading(true);
-    
+    setError("root", { message: "" });
+
     try {
-      let endpoint = "";
-      let payload = {};
-
-      // 1. Prepare Data based on Mode
-      if (mode === "register") {
-        endpoint = getEndpoint("register");
-        payload = {
-          fullName: data.fullName,
-          email: data.email,
-          password: data.password,
-          role: data.role || "candidate",
-        };
-      } else if (mode === "login") {
-        endpoint = getEndpoint("login");
-        payload = {
-          email: data.email,
-          password: data.password,
-          role: data.role || "candidate",
-        };
-      } else if (mode === "forgot") {
-        if (otpStep === "request") {
-          endpoint = getEndpoint("request-otp");
-          payload = { email: data.email };
-        } else {
-          endpoint = "/api/reset-password";
-          payload = {
-            email: data.email,
-            otp: data.otp,
-            password: data.password,
-          };
+      if (mode === "login") {
+        const result = await dispatch(
+          loginUser({
+            payload: { email: data.email, password: data.password },
+            onSuccess: () => {},
+            onError: () => {},
+          })
+        ).unwrap();
+        if (result) {
+          router.push("/dashboard");
+          router.refresh();
         }
-      }
-
-      // 2. Call the API
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
-
-      let result: Record<string, unknown> = {};
-      const contentType = response.headers.get("content-type");
-      if (contentType?.includes("application/json")) {
-        result = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      }
-
-      if (!response.ok) {
-        const msg =
-          (result.message as string) ||
-          (result.error as string) ||
-          (result.msg as string);
-        const fallback =
-          response.status === 404
-            ? "API not found. Is the server running?"
-            : response.status >= 500
-              ? "Server error. Try again later."
-              : `Request failed (${response.status})`;
-        throw new Error(typeof msg === "string" ? msg : fallback);
-      }
-
-      // Save JWT if returned (Express backend)
-      const token = (result as { token?: string })?.token;
-      if (token && typeof window !== "undefined") {
-        window.localStorage.setItem("token", token);
-      }
-
-      if (mode === "register") {
-        alert("Registration Successful! Please Login.");
-        switchMode("login");
-      } else if (mode === "login") {
-        alert("Login Successful!");
-        router.push("/dashboard");
-        router.refresh();
+      } else if (mode === "register") {
+        const result = await dispatch(
+          registerUser({
+            payload: {
+              fullName: data.fullName!,
+              email: data.email,
+              password: data.password,
+              role: data.role || "candidate",
+            },
+            onSuccess: () => {},
+            onError: () => {},
+          })
+        ).unwrap();
+        if (result) {
+          alert("Registration successful! Please log in.");
+          switchMode("login");
+        }
       } else if (mode === "forgot") {
         if (otpStep === "request") {
+          await dispatch(
+            requestOtp({
+              payload: { email: data.email },
+              onSuccess: () => {},
+              onError: () => {},
+            })
+          ).unwrap();
+          setForgotEmail(data.email);
           alert("OTP sent to your email! Enter the code and new password.");
           setOtpStep("reset");
         } else {
+          const emailForReset = forgotEmail || data.email;
+          if (!emailForReset?.trim()) {
+            setError("root", { message: "Email is required. Please go back and request OTP again." });
+            return;
+          }
+          await dispatch(
+            resetPassword({
+              payload: {
+                email: emailForReset.trim(),
+                otp: (data.otp ?? "").trim(),
+                password: data.password,
+              },
+              onSuccess: () => {},
+              onError: () => {},
+            })
+          ).unwrap();
           alert("Password reset successfully! Please log in.");
           setOtpStep("request");
+          setForgotEmail("");
           switchMode("login");
         }
       }
-
-    } catch (error: any) {
-      console.error("API Error:", error);
-      setError("root", { message: error.message });
-      alert(error.message); 
+    } catch (error: unknown) {
+      const msg = getErrorMessage(error);
+      setError("root", { message: msg });
+      alert(msg);
     } finally {
       setIsLoading(false);
     }
@@ -298,6 +288,22 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               error={errors.email}
             />
 
+            {/* OTP Code for reset step - show before password fields */}
+            {mode === "forgot" && otpStep === "reset" && (
+              <InputGroup
+                icon={<FaCheckCircle className="text-slate-500" />}
+                type="text"
+                placeholder="6-digit OTP code"
+                name="otp"
+                register={register}
+                validationRules={{
+                  required: "OTP code is required",
+                  minLength: { value: 4, message: "Code seems too short" },
+                }}
+                error={errors.otp}
+              />
+            )}
+
             {/* Password */}
             {(mode !== "forgot" || otpStep === "reset") && (
               <InputGroup
@@ -336,20 +342,16 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               />
             )}
 
-            {/* OTP Code for reset step */}
-            {mode === "forgot" && otpStep === "reset" && (
-              <InputGroup
-                icon={<FaCheckCircle className="text-slate-500" />}
-                type="text"
-                placeholder="6-digit code"
-                name="otp"
-                register={register}
-                validationRules={{
-                  required: "OTP code is required",
-                  minLength: { value: 4, message: "Code seems too short" },
-                }}
-                error={errors.otp}
-              />
+            {/* Root error (API errors) */}
+            {errors.root?.message && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400"
+              >
+                <FaExclamationCircle />
+                <span>{errors.root.message}</span>
+              </motion.div>
             )}
 
             {/* Role Selection */}

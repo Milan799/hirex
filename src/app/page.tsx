@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { PublicNavbar } from "@/components/PublicNavbar";
 
@@ -42,18 +43,18 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap gap-3">
-            <a
+            <Link
               href="/auth/register"
               className="rounded-xl bg-linear-to-r from-blue-500 to-indigo-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/40 hover:shadow-blue-500/60"
             >
               Get started as candidate
-            </a>
-            <a
+            </Link>
+            <Link
               href="/auth/register"
               className="rounded-xl border border-slate-700 bg-slate-900/60 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-slate-500 hover:bg-slate-800/80"
             >
               Post a job as recruiter
-            </a>
+            </Link>
           </div>
 
           <div className="mt-4 grid gap-4 text-xs text-slate-300 sm:text-sm sm:grid-cols-3">

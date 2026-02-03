@@ -7,5 +7,5 @@ export const handleLogout = () => {
   localStorage.clear();
 
   // NextAuth logout (optional)
-  signOut({ callbackUrl: "/login" });
+  signOut({ callbackUrl: "/auth/login" });
 };
