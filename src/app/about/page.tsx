@@ -5,7 +5,7 @@ import { PublicNavbar } from "@/components/PublicNavbar";
 
 export default function AboutPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       {/* Background mesh */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-[35%] -left-[15%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-600/10 blur-[120px]" />

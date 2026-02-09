@@ -204,19 +204,19 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   if (!mounted) return null;
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-950 text-slate-100 transition-colors duration-300">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
       {/* Background Mesh */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute -top-[30%] -left-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-600/10 blur-[120px]" />
-        <div className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] animate-pulse rounded-full bg-purple-600/10 blur-[120px] delay-1000" />
-        <div className="absolute -bottom-[20%] left-[20%] h-[50vw] w-[50vw] animate-pulse rounded-full bg-cyan-600/10 blur-[120px] delay-2000" />
+        <div className="absolute -top-[30%] -left-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-600/10" />
+        <div className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] animate-pulse rounded-full bg-purple-400/20 blur-[120px] delay-1000 dark:bg-purple-600/10" />
+        <div className="absolute -bottom-[20%] left-[20%] h-[50vw] w-[50vw] animate-pulse rounded-full bg-cyan-400/20 blur-[120px] delay-2000 dark:bg-cyan-600/10" />
       </div>
 
       {/* Glass Card */}
       <motion.div
         layout
         transition={{ type: "spring", damping: 20, stiffness: 100 }}
-        className="relative z-10 w-full max-w-105 overflow-hidden rounded-3xl border border-slate-700/50 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-xl sm:mx-4"
+        className="relative z-10 w-full max-w-105 overflow-hidden rounded-3xl border border-slate-200/60 bg-white/60 p-8 shadow-2xl shadow-blue-500/10 backdrop-blur-xl sm:mx-4 dark:border-slate-700/50 dark:bg-slate-900/60 dark:shadow-blue-500/20"
       >
         <div className="mb-6 flex flex-col items-center text-center">
           <motion.div
@@ -226,12 +226,12 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           >
             <span className="text-xl font-bold">H</span>
           </motion.div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             {mode === "login" && "Welcome Back"}
             {mode === "register" && "Create Account"}
             {mode === "forgot" && "Reset Password"}
           </h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             {mode === "login" && "Enter your credentials to access your account."}
             {mode === "register" && "Start your journey with HireX today."}
             {mode === "forgot" &&
@@ -261,7 +261,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             {/* Full Name */}
             {mode === "register" && (
               <InputGroup
-                icon={<FaUser className="text-slate-500" />}
+                icon={<FaUser className="text-slate-400 dark:text-slate-500" />}
                 type="text"
                 placeholder="Full Name"
                 name="fullName"
@@ -273,7 +273,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
 
             {/* Email */}
             <InputGroup
-              icon={<FaEnvelope className="text-slate-500" />}
+              icon={<FaEnvelope className="text-slate-400 dark:text-slate-500" />}
               type="email"
               placeholder="Email Address"
               name="email"
@@ -291,7 +291,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             {/* OTP Code for reset step - show before password fields */}
             {mode === "forgot" && otpStep === "reset" && (
               <InputGroup
-                icon={<FaCheckCircle className="text-slate-500" />}
+                icon={<FaCheckCircle className="text-slate-400 dark:text-slate-500" />}
                 type="text"
                 placeholder="6-digit OTP code"
                 name="otp"
@@ -307,7 +307,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             {/* Password */}
             {(mode !== "forgot" || otpStep === "reset") && (
               <InputGroup
-                icon={<FaLock className="text-slate-500" />}
+                icon={<FaLock className="text-slate-400 dark:text-slate-500" />}
                 type="password"
                 placeholder={mode === "forgot" ? "New Password" : "Password"}
                 name="password"
@@ -324,7 +324,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             {/* Confirm Password */}
             {(mode === "register" || (mode === "forgot" && otpStep === "reset")) && (
               <InputGroup
-                icon={<FaCheckCircle className="text-slate-500" />}
+                icon={<FaCheckCircle className="text-slate-400 dark:text-slate-500" />}
                 type="password"
                 placeholder={mode === "forgot" ? "Confirm New Password" : "Confirm Password"}
                 name="confirmPassword"
@@ -347,7 +347,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400"
+                className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-500 dark:text-red-400"
               >
                 <FaExclamationCircle />
                 <span>{errors.root.message}</span>
@@ -355,16 +355,14 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             )}
 
             {/* Role Selection */}
-            {mode !== "forgot" && (
-              <RoleToggle selectedRole={watch("role") || "candidate"} register={register} />
-            )}
-
+            {/* Removed as per user request */}
+            
             {mode === "login" && (
               <div className="flex justify-end -mt-1">
                 <button
                   type="button"
                   onClick={() => switchMode("forgot")}
-                  className="text-xs font-semibold text-blue-400 hover:text-blue-300"
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                 >
                   Forgot Password?
                 </button>
@@ -375,7 +373,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               disabled={isLoading}
-              className={`flex w-full items-center justify-center rounded-xl bg-linear-to-r from-blue-500 to-indigo-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/40 disabled:opacity-70`}
+              className={`flex w-full items-center justify-center rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/40 disabled:opacity-70 dark:from-blue-500 dark:to-indigo-500`}
             >
               {isLoading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -394,10 +392,10 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           <>
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-700"></div>
+                <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-slate-900/50 px-3 font-medium text-slate-400 backdrop-blur-xl">
+                <span className="bg-white/50 px-3 font-medium text-slate-500 backdrop-blur-xl dark:bg-slate-900/50 dark:text-slate-400">
                   Or continue with
                 </span>
               </div>
@@ -410,7 +408,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
                 onClick={() => handleSocialLogin("google")}
               />
               <SocialButton
-                icon={<FaGithub className="h-5 w-5 text-white" />}
+                icon={<FaGithub className="h-5 w-5 text-slate-900 dark:text-white" />}
                 label="GitHub"
                 onClick={() => handleSocialLogin("github")}
               />
@@ -418,13 +416,13 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           </>
         )}
 
-        <div className="mt-8 text-center text-sm font-medium text-slate-400">
+        <div className="mt-8 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
           {mode === "login" ? (
             <>
               Don&apos;t have an account?{" "}
               <button
                 onClick={() => switchMode("register")}
-                className="text-blue-400 hover:underline"
+                className="text-blue-600 hover:underline dark:text-blue-400"
               >
                 Sign up
               </button>
@@ -434,7 +432,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               Already have an account?{" "}
               <button
                 onClick={() => switchMode("login")}
-                className="text-blue-400 hover:underline"
+                className="text-blue-600 hover:underline dark:text-blue-400"
               >
                 Log in
               </button>
@@ -442,7 +440,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           ) : (
             <button
               onClick={() => switchMode("login")}
-              className="flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200"
+              className="flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             >
               <FaArrowLeft className="text-xs" /> Back to Login
             </button>
@@ -470,7 +468,7 @@ const InputGroup = ({
   return (
     <div className="w-full">
       <div
-        className={`relative flex items-center rounded-xl border bg-slate-800/50 px-4 py-3 transition-all focus-within:bg-slate-800 focus-within:ring-blue-500/20 ${error ? "border-red-500 ring-4 ring-red-500/20" : "border-slate-700 focus-within:ring-4 focus-within:border-blue-500"}`}
+        className={`relative flex items-center rounded-xl border bg-white/50 px-4 py-3 transition-all focus-within:bg-white focus-within:ring-blue-500/20 dark:bg-slate-800/50 dark:focus-within:bg-slate-800 ${error ? "border-red-500 ring-4 ring-red-500/10 dark:ring-red-500/20" : "border-slate-200 focus-within:border-blue-500 focus-within:ring-4 dark:border-slate-700"}`}
       >
         <span className="mr-3">{icon}</span>
         <input
@@ -478,13 +476,13 @@ const InputGroup = ({
           type={inputType}
           placeholder={placeholder}
           suppressHydrationWarning={true}
-          className="w-full bg-transparent text-sm font-medium text-white placeholder:text-slate-500 focus:outline-none"
+          className="w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="ml-2 text-slate-500 hover:text-slate-300"
+            className="ml-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
           >
             {show ? <FaEyeSlash /> : <FaEye />}
           </button>
@@ -498,7 +496,7 @@ const InputGroup = ({
             animate={{ opacity: 1, height: "auto", marginTop: 4 }}
             exit={{ opacity: 0, height: 0, marginTop: 0 }}
             transition={{ type: "spring", stiffness: 150, damping: 20 }} 
-            className="flex items-center gap-1.5 text-xs font-semibold text-red-400 ml-1"
+            className="flex items-center gap-1.5 text-xs font-semibold text-red-500 ml-1 dark:text-red-400"
           >
             <FaExclamationCircle />
             <span>{error.message}</span>
@@ -513,61 +511,8 @@ const SocialButton = ({ icon, label, onClick }: any) => (
   <button
     type="button"
     onClick={onClick}
-    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 py-2.5 text-sm font-semibold text-slate-200 transition-all hover:bg-slate-700 hover:shadow-md active:scale-95"
+    className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:shadow-md active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
   >
     {icon} <span>{label}</span>
   </button>
 );
-
-const RoleToggle = ({ selectedRole, register }: any) => {
-  return (
-    <div className="w-full">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-        I am a
-      </p>
-      <div className="grid grid-cols-2 gap-3">
-        <label
-          className={`cursor-pointer rounded-xl border px-4 py-3 text-left text-xs font-semibold transition-all ${
-            selectedRole === "candidate"
-              ? "border-blue-500 bg-blue-500/10 text-blue-100 shadow-lg shadow-blue-500/30"
-              : "border-slate-700 bg-slate-800/40 text-slate-300 hover:border-slate-500 hover:bg-slate-800"
-          }`}
-        >
-          <input
-            type="radio"
-            value="candidate"
-            {...register("role")}
-            className="hidden"
-          />
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-bold">Candidate</span>
-            <span className="text-[11px] font-normal text-slate-400">
-              Looking for jobs and opportunities.
-            </span>
-          </div>
-        </label>
-
-        <label
-          className={`cursor-pointer rounded-xl border px-4 py-3 text-left text-xs font-semibold transition-all ${
-            selectedRole === "recruiter"
-              ? "border-indigo-500 bg-indigo-500/10 text-indigo-100 shadow-lg shadow-indigo-500/30"
-              : "border-slate-700 bg-slate-800/40 text-slate-300 hover:border-slate-500 hover:bg-slate-800"
-          }`}
-        >
-          <input
-            type="radio"
-            value="recruiter"
-            {...register("role")}
-            className="hidden"
-          />
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-bold">Recruiter</span>
-            <span className="text-[11px] font-normal text-slate-400">
-              Posting jobs and managing candidates.
-            </span>
-          </div>
-        </label>
-      </div>
-    </div>
-  );
-};
