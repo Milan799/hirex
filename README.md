@@ -1,75 +1,116 @@
-# HireX
+# HireX 🚀
 
-Job Hunting Platform — Next.js frontend with optional Express backend.
+**HireX** is a modern, full-stack job hunting platform connecting talented candidates with top recruiters. Built with **Next.js 15**, **Tailwind CSS**, and **Redux Toolkit**, it features a sleek, responsive UI and a robust authentication system.
 
-## Quick Start
+---
 
-### Option 1: Next.js only (simplest)
+## ✨ Features
 
-Uses built-in API routes. No separate server needed.
+*   **Modern UI/UX**: Responsive design with Tailwind CSS, Framer Motion animations, and a polished dark/light theme aesthetic.
+*   **Job Search**: Advanced search with filters for skills, location, and experience.
+*   **Authentication**: Secure login and registration for Candidates and Recruiters.
+*   **Mega Menu**: Comprehensive navigation with categorized job and company links.
+*   **Summer Offer**: Interactive promotional banner for recruiters.
+*   **Redux State Management**: Centralized state for user sessions and app data.
+
+---
+
+## 🛠️ Tech Stack
+
+*   **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+*   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+*   **Animations**: [Framer Motion](https://www.framer.com/motion/)
+*   **State Management**: [Redux Toolkit](https://redux-toolkit.js.org/)
+*   **Icons**: [React Icons](https://react-icons.github.io/react-icons/)
+*   **Backend (Optional)**: Express.js (included in `/server`)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+*   Node.js 18+ installed
+*   npm or yarn
+
+### 1. Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/your-username/HireX.git
+cd HireX
+npm install
+```
+
+### 2. Environment Setup
+
+Create a `.env` file in the root directory:
 
 ```bash
 cp .env.example .env
-npm install
+```
+
+Ensure your `.env` contains necessary API keys (if using external services or the Express backend).
+
+### 3. Running the App
+
+#### Option A: Next.js Only (Recommended for Frontend Dev)
+
+Runs the frontend with built-in API routes.
+
+```bash
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Open [http://localhost:3000](http://localhost:3000). Auth (register/login) works via `/api/register` and `/api/login`.
+#### Option B: Full Stack (Frontend + Express Backend)
 
-### Option 2: With Express backend
+Runs both the Next.js frontend and the Express backend concurrently.
 
-Uses Express for auth and `/api/posts`. Requires both servers.
+1.  **Install Server Dependencies**:
+    ```bash
+    cd server
+    npm install
+    cd ..
+    ```
+2.  **Configure Environment**:
+    Set `NEXT_PUBLIC_API_URL=http://localhost:5000` in your `.env` file.
+3.  **Run Both Servers**:
+    ```bash
+    npm run dev:all
+    ```
 
-1. Copy env:
-   ```bash
-   cp .env.example .env
-   ```
-2. In `.env`, set:
-   ```
-   NEXT_PUBLIC_API_URL=http://localhost:5000
-   ```
-3. Install & run both:
-   ```bash
-   npm install
-   cd server && npm install && cd ..
-   npm run dev:all
-   ```
+---
 
-- Frontend: [http://localhost:3000](http://localhost:3000)
-- Backend: [http://localhost:5000](http://localhost:5000)
-
-## Scripts
-
-| Command       | Description                    |
-|--------------|--------------------------------|
-| `npm run dev`| Next.js dev server             |
-| `npm run server` | Express backend (port 5000) |
-| `npm run dev:all` | Frontend + backend together |
-| `npm run build` | Build Next.js for production |
-| `npm run lint` | Run ESLint                    |
-
-## Project Structure
+## 📂 Project Structure
 
 ```
-├── src/app/          # Next.js pages & API routes
-├── src/lib/          # Axios, Redux, utils
-├── server/           # Express backend (optional)
-└── docs/             # AXIOS-REDUX-FLOW.md
+HireX/
+├── src/
+│   ├── app/              # Next.js App Router pages & layouts
+│   ├── components/       # Reusable UI components (Navbar, Footer, etc.)
+│   ├── lib/              # Utilities, Redux store, Axios setup
+│   └── styles/           # Global styles
+├── server/               # Express.js backend code
+├── public/               # Static assets
+└── ...config files
 ```
 
-## Auth Flow
+---
 
-- **Register / Login / Forgot password**: Form → `fetch()` → API
-- **Social (Google, GitHub)**: NextAuth OAuth
-- **Token**: Stored in `localStorage` when using Express backend
+## 🤝 Contributing
 
-## Troubleshooting
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-**Auth errors with Express backend:**
-- Set `NEXT_PUBLIC_API_URL=http://localhost:5000` (base URL only, no `/api/auth`)
-- Restart Next.js after changing `.env` (required for `NEXT_PUBLIC_` vars)
+1.  Fork the project
+2.  Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
 
-## Learn More
+---
 
-- [Next.js Docs](https://nextjs.org/docs)
-- [Axios ↔ Redux Flow](docs/AXIOS-REDUX-FLOW.md)
+## 📄 License
+
+This project is open-source and available under the [MIT License](LICENSE).
