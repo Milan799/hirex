@@ -204,249 +204,261 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   if (!mounted) return null;
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
-      {/* Background Mesh */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute -top-[30%] -left-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-600/10" />
-        <div className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] animate-pulse rounded-full bg-purple-400/20 blur-[120px] delay-1000 dark:bg-purple-600/10" />
-        <div className="absolute -bottom-[20%] left-[20%] h-[50vw] w-[50vw] animate-pulse rounded-full bg-cyan-400/20 blur-[120px] delay-2000 dark:bg-cyan-600/10" />
+    <div className="flex min-h-screen w-full bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
+      
+      {/* Desktop Split Layout: Left Image Section */}
+      <div className="hidden w-1/2 lg:block relative overflow-hidden bg-slate-900">
+        <div className="absolute inset-0">
+           <img 
+              src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1600&q=80" 
+              alt="Office" 
+              className="h-full w-full object-cover opacity-50 mix-blend-overlay"
+           />
+           <div className="absolute inset-0 bg-linear-to-tr from-blue-900/80 to-purple-900/80" />
+        </div>
+        
+        <div className="relative flex h-full flex-col justify-between p-12 text-white">
+           <div className="flex items-center gap-2">
+              <span className="text-3xl font-bold">HireX</span>
+           </div>
+           
+           <div className="mb-12 space-y-6">
+              <motion.div 
+                 initial={{ opacity: 0, x: -20 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 transition={{ delay: 0.2 }}
+              >
+                 <h2 className="text-5xl font-bold leading-tight">
+                    Find your dream job <br/> 
+                    <span className="text-blue-400">in record time.</span>
+                 </h2>
+              </motion.div>
+              <motion.p 
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 transition={{ delay: 0.4 }}
+                 className="max-w-md text-lg text-slate-300"
+              >
+                 Join thousands of professionals and top companies connecting daily on the world's most intuitive recruitment platform.
+              </motion.p>
+           </div>
+           
+           <div className="flex items-center gap-4 text-sm text-slate-400">
+              <span>© 2026 HireX Inc.</span>
+              <span className="h-1 w-1 rounded-full bg-slate-500" />
+              <span>Privacy Policy</span>
+              <span className="h-1 w-1 rounded-full bg-slate-500" />
+              <span>Terms of Service</span>
+           </div>
+        </div>
       </div>
 
-      {/* Glass Card */}
-      <motion.div
-        layout
-        transition={{ type: "spring", damping: 20, stiffness: 100 }}
-        className="relative z-10 w-full max-w-105 overflow-hidden rounded-3xl border border-slate-200/60 bg-white/60 p-8 shadow-2xl shadow-blue-500/10 backdrop-blur-xl sm:mx-4 dark:border-slate-700/50 dark:bg-slate-900/60 dark:shadow-blue-500/20"
-      >
-        <div className="mb-6 flex flex-col items-center text-center">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-tr from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/30"
-          >
-            <span className="text-xl font-bold">H</span>
-          </motion.div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            {mode === "login" && "Welcome Back"}
-            {mode === "register" && "Create Account"}
-            {mode === "forgot" && "Reset Password"}
-          </h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            {mode === "login" && "Enter your credentials to access your account."}
-            {mode === "register" && "Start your journey with HireX today."}
-            {mode === "forgot" &&
-              (otpStep === "request"
-                ? "We'll send you a one-time code to reset your password."
-                : "Enter the code from your email and choose a new password.")}
-          </p>
+      {/* Right Form Section */}
+      <div className="relative flex w-full items-center justify-center p-4 lg:w-1/2">
+        {/* Mobile Background Mesh */}
+        <div className="absolute inset-0 z-0 lg:hidden">
+          <div className="absolute -top-[30%] -left-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-600/10" />
+          <div className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] animate-pulse rounded-full bg-purple-400/20 blur-[120px] delay-1000 dark:bg-purple-600/10" />
         </div>
 
-        <AnimatePresence mode="wait" custom={direction}>
-          <motion.form
-            key={mode}
-            custom={direction}
-            variants={slideVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            transition={{
-              type: "spring",
-              stiffness: 100,
-              damping: 25,
-              mass: 1.2,
-            }}
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-5"
-          >
-            {/* Full Name */}
-            {mode === "register" && (
-              <InputGroup
-                icon={<FaUser className="text-slate-400 dark:text-slate-500" />}
-                type="text"
-                placeholder="Full Name"
-                name="fullName"
-                register={register}
-                validationRules={{ required: "Full Name is required" }}
-                error={errors.fullName}
-              />
-            )}
+        {/* Auth Card */}
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", damping: 20, stiffness: 100 }}
+          className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-slate-200/60 bg-white/80 p-6 shadow-2xl shadow-blue-500/10 backdrop-blur-xl sm:p-10 dark:border-slate-700/50 dark:bg-slate-900/60 dark:shadow-blue-500/20"
+        >
+          <div className="mb-8 text-center">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-tr from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/30"
+            >
+              <span className="text-2xl font-bold">H</span>
+            </motion.div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {mode === "login" && "Welcome Back"}
+              {mode === "register" && "Create Account"}
+              {mode === "forgot" && "Reset Password"}
+            </h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {mode === "login" && "Enter your credentials to access your account."}
+              {mode === "register" && "Start your journey with HireX today."}
+              {mode === "forgot" && "We'll help you get back into your account."}
+            </p>
+          </div>
 
-            {/* Email */}
-            <InputGroup
-              icon={<FaEnvelope className="text-slate-400 dark:text-slate-500" />}
-              type="email"
-              placeholder="Email Address"
-              name="email"
-              register={register}
-              validationRules={{
-                required: "Email is required",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Invalid email address",
-                },
-              }}
-              error={errors.email}
-            />
+          <AnimatePresence mode="wait" custom={direction}>
+            <motion.form
+              key={mode}
+              custom={direction}
+              variants={slideVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 100, damping: 25 }}
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-4"
+            >
+              {/* Full Name */}
+              {mode === "register" && (
+                <InputGroup
+                  icon={<FaUser className="text-slate-400 dark:text-slate-500" />}
+                  type="text"
+                  placeholder="Full Name"
+                  name="fullName"
+                  register={register}
+                  validationRules={{ required: "Full Name is required" }}
+                  error={errors.fullName}
+                />
+              )}
 
-            {/* OTP Code for reset step - show before password fields */}
-            {mode === "forgot" && otpStep === "reset" && (
+              {/* Email */}
               <InputGroup
-                icon={<FaCheckCircle className="text-slate-400 dark:text-slate-500" />}
-                type="text"
-                placeholder="6-digit OTP code"
-                name="otp"
-                register={register}
-                validationRules={{
-                  required: "OTP code is required",
-                  minLength: { value: 4, message: "Code seems too short" },
-                }}
-                error={errors.otp}
-              />
-            )}
-
-            {/* Password */}
-            {(mode !== "forgot" || otpStep === "reset") && (
-              <InputGroup
-                icon={<FaLock className="text-slate-400 dark:text-slate-500" />}
-                type="password"
-                placeholder={mode === "forgot" ? "New Password" : "Password"}
-                name="password"
+                icon={<FaEnvelope className="text-slate-400 dark:text-slate-500" />}
+                type="email"
+                placeholder="Email Address"
+                name="email"
                 register={register}
                 validationRules={{
-                  required: "Password is required",
-                  minLength: { value: 6, message: "Min 6 chars" },
-                }}
-                error={errors.password}
-                isPassword
-              />
-            )}
-
-            {/* Confirm Password */}
-            {(mode === "register" || (mode === "forgot" && otpStep === "reset")) && (
-              <InputGroup
-                icon={<FaCheckCircle className="text-slate-400 dark:text-slate-500" />}
-                type="password"
-                placeholder={mode === "forgot" ? "Confirm New Password" : "Confirm Password"}
-                name="confirmPassword"
-                register={register}
-                isPassword
-                validationRules={{
-                  required: "Confirm Password is required",
-                  validate: (val: string) => {
-                    if (watch("password") != val) {
-                      return "Passwords do not match";
-                    }
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
                   },
                 }}
-                error={errors.confirmPassword}
+                error={errors.email}
               />
-            )}
 
-            {/* Root error (API errors) */}
-            {errors.root?.message && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-500 dark:text-red-400"
-              >
-                <FaExclamationCircle />
-                <span>{errors.root.message}</span>
-              </motion.div>
-            )}
-
-            {/* Role Selection */}
-            {/* Removed as per user request */}
-            
-            {mode === "login" && (
-              <div className="flex justify-end -mt-1">
-                <button
-                  type="button"
-                  onClick={() => switchMode("forgot")}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            )}
-
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={isLoading}
-              className={`flex w-full items-center justify-center rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/40 disabled:opacity-70 dark:from-blue-500 dark:to-indigo-500`}
-            >
-              {isLoading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              ) : mode === "login" ? (
-                "Sign In"
-              ) : mode === "register" ? (
-                "Sign Up"
-              ) : (
-                otpStep === "request" ? "Send OTP" : "Reset Password"
+              {/* OTP Field */}
+              {mode === "forgot" && otpStep === "reset" && (
+                <InputGroup
+                  icon={<FaCheckCircle className="text-slate-400 dark:text-slate-500" />}
+                  type="text"
+                  placeholder="6-digit OTP code"
+                  name="otp"
+                  register={register}
+                  validationRules={{
+                    required: "OTP code is required",
+                    minLength: { value: 4, message: "Code seems too short" },
+                  }}
+                  error={errors.otp}
+                />
               )}
-            </motion.button>
-          </motion.form>
-        </AnimatePresence>
 
-        {mode !== "forgot" && (
-          <>
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white/50 px-3 font-medium text-slate-500 backdrop-blur-xl dark:bg-slate-900/50 dark:text-slate-400">
-                  Or continue with
-                </span>
-              </div>
-            </div>
+              {/* Password */}
+              {(mode !== "forgot" || otpStep === "reset") && (
+                <InputGroup
+                  icon={<FaLock className="text-slate-400 dark:text-slate-500" />}
+                  type="password"
+                  placeholder={mode === "forgot" ? "New Password" : "Password"}
+                  name="password"
+                  register={register}
+                  validationRules={{
+                    required: "Password is required",
+                    minLength: { value: 6, message: "Min 6 chars" },
+                  }}
+                  error={errors.password}
+                  isPassword
+                />
+              )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <SocialButton
-                icon={<FcGoogle className="h-5 w-5" />}
-                label="Google"
-                onClick={() => handleSocialLogin("google")}
-              />
-              <SocialButton
-                icon={<FaGithub className="h-5 w-5 text-slate-900 dark:text-white" />}
-                label="GitHub"
-                onClick={() => handleSocialLogin("github")}
-              />
-            </div>
-          </>
-        )}
+              {/* Confirm Password */}
+              {(mode === "register" || (mode === "forgot" && otpStep === "reset")) && (
+                <InputGroup
+                  icon={<FaCheckCircle className="text-slate-400 dark:text-slate-500" />}
+                  type="password"
+                  placeholder="Confirm Password"
+                  name="confirmPassword"
+                  register={register}
+                  isPassword
+                  validationRules={{
+                    required: "Confirm Password is required",
+                    validate: (val: string) => watch("password") === val || "Passwords do not match",
+                  }}
+                  error={errors.confirmPassword}
+                />
+              )}
 
-        <div className="mt-8 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
-          {mode === "login" ? (
-            <>
-              Don&apos;t have an account?{" "}
-              <button
-                onClick={() => switchMode("register")}
-                className="text-blue-600 hover:underline dark:text-blue-400"
+              {/* Forgot Password Link */}
+              {mode === "login" && (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => switchMode("forgot")}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={isLoading}
+                className="mt-2 flex w-full items-center justify-center rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-blue-500/40 disabled:opacity-70 dark:from-blue-500 dark:to-indigo-500"
               >
-                Sign up
-              </button>
-            </>
-          ) : mode === "register" ? (
+                {isLoading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : mode === "login" ? "Sign In" : mode === "register" ? "Create Account" : "Submit"}
+              </motion.button>
+            </motion.form>
+          </AnimatePresence>
+
+          {mode !== "forgot" && (
             <>
-              Already have an account?{" "}
-              <button
-                onClick={() => switchMode("login")}
-                className="text-blue-600 hover:underline dark:text-blue-400"
-              >
-                Log in
-              </button>
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-3 font-medium text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <SocialButton
+                  icon={<FcGoogle className="h-5 w-5" />}
+                  label="Google"
+                  onClick={() => handleSocialLogin("google")}
+                />
+                <SocialButton
+                  icon={<FaGithub className="h-5 w-5 text-slate-900 dark:text-white" />}
+                  label="GitHub"
+                  onClick={() => handleSocialLogin("github")}
+                />
+              </div>
             </>
-          ) : (
-            <button
-              onClick={() => switchMode("login")}
-              className="flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-            >
-              <FaArrowLeft className="text-xs" /> Back to Login
-            </button>
           )}
-        </div>
-      </motion.div>
+
+          <div className="mt-8 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+            {mode === "login" ? (
+              <>
+                New to HireX?{" "}
+                <button onClick={() => switchMode("register")} className="text-blue-600 hover:underline dark:text-blue-400">
+                  Create an account
+                </button>
+              </>
+            ) : mode === "register" ? (
+              <>
+                Already have an account?{" "}
+                <button onClick={() => switchMode("login")} className="text-blue-600 hover:underline dark:text-blue-400">
+                  Log in
+                </button>
+              </>
+            ) : (
+              <button onClick={() => switchMode("login")} className="flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 dark:text-slate-400">
+                <FaArrowLeft className="text-xs" /> Back to Login
+              </button>
+            )}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }

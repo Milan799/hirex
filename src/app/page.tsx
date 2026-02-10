@@ -58,7 +58,10 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-                <button className="whitespace-nowrap rounded-full bg-white px-5 py-2 text-sm font-bold text-rose-600 transition-transform hover:scale-105 active:scale-95">
+                <button 
+                  suppressHydrationWarning
+                  className="whitespace-nowrap rounded-full bg-white px-5 py-2 text-sm font-bold text-rose-600 transition-transform hover:scale-105 active:scale-95"
+                >
                   Claim Offer
                 </button>
               </div>
@@ -171,7 +174,10 @@ export default function Home() {
 }
 
 const QuickChip = ({ label }: { label: string }) => (
-  <button className="rounded-full border border-slate-200 bg-white/50 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-blue-500 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:text-blue-400">
+  <button 
+    suppressHydrationWarning
+    className="rounded-full border border-slate-200 bg-white/50 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-blue-500 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300 dark:hover:text-blue-400"
+  >
     {label}
   </button>
 );
@@ -185,7 +191,7 @@ const CompanyCard = ({ name, type }: { name: string; type: string }) => (
         <h3 className="font-semibold text-slate-900 dark:text-white">{name}</h3>
         <p className="text-xs text-slate-500 dark:text-slate-400">{type}</p>
      </div>
-     <button className="mt-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">View jobs</button>
+     <button suppressHydrationWarning className="mt-1 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">View jobs</button>
   </div>
 );
 
@@ -206,51 +212,108 @@ const JobSearchForm = () => (
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: 0.05, type: "spring", stiffness: 120, damping: 24 }}
-    className="relative z-20 mx-auto w-full max-w-4xl rounded-full border border-slate-200 bg-white p-2 shadow-2xl shadow-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-blue-500/20"
+    className="relative z-20 mx-auto w-full max-w-4xl"
   >
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+    {/* Desktop View */}
+    <div className="hidden rounded-full border border-slate-200 bg-white p-2 shadow-2xl shadow-blue-500/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-blue-500/20 sm:block">
+      <div className="flex flex-row items-center">
+        {/* Search Input 1 */}
+        <div className="relative flex-1 px-4 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl">
+           <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Skills / Company</label>
+           <input 
+              suppressHydrationWarning
+              type="text" 
+              placeholder="Role, Skill or Company" 
+              className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+           />
+        </div>
+
+        <div className="h-10 w-px bg-slate-200 dark:bg-slate-700" />
+
+        {/* Search Input 2 */}
+        <div className="relative flex-1 px-4 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl">
+           <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Location</label>
+           <input 
+              suppressHydrationWarning
+              type="text" 
+              placeholder="City or Remote" 
+              className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+           />
+        </div>
+
+        <div className="h-10 w-px bg-slate-200 dark:bg-slate-700" />
+
+        {/* Search Input 3 */}
+        <div className="relative w-48 px-4 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl">
+           <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Experience</label>
+           <select 
+             suppressHydrationWarning
+             className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 focus:outline-none dark:text-white"
+           >
+              <option value="" className="dark:bg-slate-900">Select Yrs</option>
+              <option value="0-1" className="dark:bg-slate-900">Fresher (0-1)</option>
+              <option value="1-3" className="dark:bg-slate-900">1-3 Years</option>
+              <option value="3-5" className="dark:bg-slate-900">3-5 Years</option>
+              <option value="5+" className="dark:bg-slate-900">5+ Years</option>
+           </select>
+        </div>
+
+        <button
+          suppressHydrationWarning
+          type="button"
+          className="m-1 rounded-full bg-blue-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-500 hover:shadow-blue-500/50 active:scale-95"
+        >
+          Search
+        </button>
+      </div>
+    </div>
+
+    {/* Mobile View */}
+    <div className="flex flex-col gap-3 sm:hidden">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xl shadow-blue-500/5 dark:border-slate-700 dark:bg-slate-900">
+        <div className="flex flex-col gap-4">
+          <div className="relative border-b border-slate-100 pb-2 dark:border-slate-800">
+             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">What</label>
+             <input 
+                suppressHydrationWarning
+                type="text" 
+                placeholder="Job title, key words or company" 
+                className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+             />
+          </div>
+
+          <div className="relative border-b border-slate-100 pb-2 dark:border-slate-800">
+             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Where</label>
+             <input 
+                suppressHydrationWarning
+                type="text" 
+                placeholder="City, state or zip code" 
+                className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+             />
+          </div>
+
+          <div className="relative">
+             <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Experience</label>
+             <select 
+               suppressHydrationWarning
+               className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 focus:outline-none dark:text-white"
+             >
+                <option value="" className="dark:bg-slate-900">Select Experience</option>
+                <option value="0-1" className="dark:bg-slate-900">Fresher (0-1)</option>
+                <option value="1-3" className="dark:bg-slate-900">1-3 Years</option>
+                <option value="3-5" className="dark:bg-slate-900">3-5 Years</option>
+                <option value="5+" className="dark:bg-slate-900">5+ Years</option>
+             </select>
+          </div>
+        </div>
+      </div>
       
-      {/* Search Input 1 */}
-      <div className="relative flex-1 px-4 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl">
-         <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Skills / Company</label>
-         <input 
-            type="text" 
-            placeholder="Role, Skill or Company" 
-            className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
-         />
-      </div>
-
-      <div className="hidden h-10 w-px bg-slate-200 dark:bg-slate-700 sm:block" />
-
-      {/* Search Input 2 */}
-      <div className="relative flex-1 px-4 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl">
-         <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Location</label>
-         <input 
-            type="text" 
-            placeholder="City or Remote" 
-            className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
-         />
-      </div>
-
-      <div className="hidden h-10 w-px bg-slate-200 dark:bg-slate-700 sm:block" />
-
-      {/* Search Input 3 */}
-      <div className="relative w-full px-4 py-2 sm:w-48 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xl">
-         <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Experience</label>
-         <select className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 focus:outline-none dark:text-white">
-            <option value="" className="dark:bg-slate-900">Select Yrs</option>
-            <option value="0-1" className="dark:bg-slate-900">Fresher (0-1)</option>
-            <option value="1-3" className="dark:bg-slate-900">1-3 Years</option>
-            <option value="3-5" className="dark:bg-slate-900">3-5 Years</option>
-            <option value="5+" className="dark:bg-slate-900">5+ Years</option>
-         </select>
-      </div>
-
       <button
+        suppressHydrationWarning
         type="button"
-        className="m-1 rounded-full bg-blue-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:bg-blue-500 hover:shadow-blue-500/50 active:scale-95"
+        className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 active:scale-95"
       >
-        Search
+        Search Jobs
       </button>
     </div>
   </motion.div>
@@ -274,7 +337,7 @@ const JobHighlight = ({ title, company, location, type }: JobHighlightProps) => 
         {type}
       </p>
     </div>
-    <button className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 hover:border-blue-500 hover:text-blue-600 dark:border-slate-700 dark:text-slate-100 dark:hover:text-blue-200">
+    <button suppressHydrationWarning className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-700 hover:border-blue-500 hover:text-blue-600 dark:border-slate-700 dark:text-slate-100 dark:hover:text-blue-200">
       View
     </button>
   </div>
@@ -303,6 +366,7 @@ const CategoryCard = ({ badge, title, items }: CategoryCardProps) => (
       </ul>
     </div>
     <button 
+      suppressHydrationWarning
       className="mt-3 inline-flex items-center justify-center text-[11px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
     >
       View roles
