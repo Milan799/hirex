@@ -17,20 +17,14 @@ export default function DashboardPage() {
               Track your applications, discover new roles, and stay on top of your hiring journey.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          {/* <div className="flex flex-wrap gap-3">
             <Link
               href="/"
               className="rounded-xl border border-slate-200 bg-white/60 px-4 py-2 text-sm font-medium text-slate-700 hover:border-blue-500 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:text-blue-200"
             >
               Back to home
             </Link>
-            <Link
-              href="/auth/login"
-              className="rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 dark:from-blue-500 dark:to-indigo-500 dark:shadow-blue-500/40"
-            >
-              Switch account
-            </Link>
-          </div>
+          </div> */}
         </header>
 
         {/* Stats row */}

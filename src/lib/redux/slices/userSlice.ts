@@ -56,6 +56,7 @@ export const loginUser = createAsyncThunk(
       onSuccess?.(res.data);
       return res.data;
     } catch (err: unknown) {
+      console.log("Login error:", err);
       const e = err as { message?: string; response?: { data?: unknown } };
       if (e.message === "UNAUTHORIZED") {
         return rejectWithValue("Session expired");

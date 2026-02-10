@@ -25,6 +25,7 @@ import {
   resetPassword,
 } from "@/lib/redux/slices/userSlice";
 import { useAppDispatch } from "@/lib/redux/hooks";
+import { notify } from "@/lib/utils";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -99,8 +100,14 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
         const result = await dispatch(
           loginUser({
             payload: { email: data.email, password: data.password },
-            onSuccess: () => {},
-            onError: () => {},
+            onSuccess: (res) => {
+              console.log("Login successful:", res);
+              // notify(res.message || "Login successful!", "success");
+            },
+            onError: (error: any) => {
+              console.log("error",error)
+              notify(getErrorMessage(error), "error");
+            },
           })
         ).unwrap();
         if (result) {
@@ -160,9 +167,9 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
         }
       }
     } catch (error: unknown) {
-      const msg = getErrorMessage(error);
-      setError("root", { message: msg });
-      alert(msg);
+      // const msg = getErrorMessage(error);
+      setError("root", { message: getErrorMessage(error) });
+      // alert(msg);
     } finally {
       setIsLoading(false);
     }
@@ -239,7 +246,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
                  transition={{ delay: 0.4 }}
                  className="max-w-md text-lg text-slate-300"
               >
-                 Join thousands of professionals and top companies connecting daily on the world's most intuitive recruitment platform.
+                 Join thousands of professionals and top companies connecting daily on the world&#39;s most intuitive recruitment platform.
               </motion.p>
            </div>
            

@@ -5,6 +5,9 @@ import { ReduxProvider } from "@/lib/redux/provider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { FooterWrapper } from "@/components/FooterWrapper";
 import { ClientLoader } from "@/components/ClientLoader";
+  import { ToastContainer } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +31,7 @@ export default function RootLayout({
             <ClientLoader>
               {children}
               <FooterWrapper />
+              <ToastContainer />
             </ClientLoader>
           </ReduxProvider>
         </SessionProvider>
