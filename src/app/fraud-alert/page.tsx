@@ -1,4 +1,4 @@
-import { PublicNavbar } from "@/components/PublicNavbar";
+import { PublicNavbar } from "@/components/layout/Navbar";
 import { FaExclamationTriangle, FaShieldAlt, FaUserSecret } from "react-icons/fa";
 
 export default function FraudAlert() {

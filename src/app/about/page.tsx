@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PublicNavbar } from "@/components/PublicNavbar";
+import { PublicNavbar } from "@/components/layout/Navbar";
 
 export default function AboutPage() {
   return (

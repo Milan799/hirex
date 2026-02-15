@@ -1,9 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Footer } from "./Footer";
+import { Footer } from "@/components/layout/Footer";
 
-export function FooterWrapper() {
+export default function FooterWrapper() {
   const pathname = usePathname();
   
   // Paths where the footer should be hidden

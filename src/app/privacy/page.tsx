@@ -1,4 +1,4 @@
-import { PublicNavbar } from "@/components/PublicNavbar";
+import { PublicNavbar } from "@/components/layout/Navbar";
 
 export default function PrivacyPolicy() {
   return (

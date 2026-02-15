@@ -23,8 +23,9 @@ import {
   registerUser,
   requestOtp,
   resetPassword,
-} from "@/lib/redux/slices/userSlice";
-import { useAppDispatch } from "@/lib/redux/hooks";
+  setUser,
+} from "@/lib/store/slices/userSlice";
+import { useAppDispatch } from "@/lib/store/hooks";
 import { notify } from "@/lib/utils";
 
 type AuthMode = "login" | "register" | "forgot";
@@ -111,7 +112,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           })
         ).unwrap();
         if (result) {
-          router.push("/dashboard");
+          router.push("/mnjuser/homepage");
           router.refresh();
         }
       } else if (mode === "register") {
@@ -179,7 +180,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
     setIsLoading(true);
     try {
       const result = await signIn(provider, { 
-        callbackUrl: "/dashboard", 
+        callbackUrl: "/mnjuser/homepage", 
         redirect: false,
       });
       
@@ -187,7 +188,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
         alert(`Social login failed: ${result.error}`);
         setIsLoading(false);
       } else if (result?.ok) {
-        router.push("/dashboard");
+        router.push("/mnjuser/homepage");
         router.refresh();
       }
     } catch (error: any) {
@@ -261,14 +262,14 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
       </div>
 
       {/* Right Form Section */}
-      <div className="relative flex w-full items-center justify-center p-4 lg:w-1/2">
-        {/* Mobile Background Mesh */}
-        <div className="absolute inset-0 z-0 lg:hidden">
+      <div className="relative flex min-h-screen w-full items-center justify-center p-4 lg:w-1/2">
+        {/* Mobile Background Mesh - Lower Z-Index */}
+        <div className="absolute inset-0 z-0 lg:hidden pointer-events-none">
           <div className="absolute -top-[30%] -left-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-600/10" />
           <div className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] animate-pulse rounded-full bg-purple-400/20 blur-[120px] delay-1000 dark:bg-purple-600/10" />
         </div>
 
-        {/* Auth Card */}
+        {/* Auth Card - Higher Z-Index */}
         <motion.div
           layout
           initial={{ opacity: 0, y: 20 }}

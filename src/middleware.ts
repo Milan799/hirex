@@ -4,7 +4,7 @@ export function middleware(request:any) {
   const { pathname } = request.nextUrl;
 
   const protectedRoutes = [
-    "/dashboard",
+    "/mnjuser/homepage",
     "/profile",
     "/admin",
     "/settings",
@@ -30,16 +30,15 @@ export function middleware(request:any) {
   // If user is already logged in and tries to visit login page → send to dashboard
   if (isAuthRoute && accessToken) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/mnjuser/homepage";
     return NextResponse.redirect(url);
   }
-
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
+    "/mnjuser/homepage/:path*",
     "/profile/:path*",
     "/admin/:path*",
     "/settings/:path*",

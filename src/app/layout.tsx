@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ReduxProvider } from "@/lib/redux/provider";
+import { ReduxProvider } from "@/lib/store/provider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
-import { FooterWrapper } from "@/components/FooterWrapper";
-import { ClientLoader } from "@/components/ClientLoader";
+import FooterWrapper from "@/components/FooterWrapper";
+import { ClientLoader } from "@/components/layout/ClientLoader";
   import { ToastContainer } from 'react-toastify';
   import 'react-toastify/dist/ReactToastify.css';
 
