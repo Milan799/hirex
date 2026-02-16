@@ -145,9 +145,13 @@ export default function Homepage() {
                     Last updated today
                   </div>
                   
-                  <button className="mt-5 w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800 hover:shadow-xl transition-all dark:bg-white dark:text-slate-900 dark:shadow-none dark:hover:bg-slate-200">
+                  <Link 
+                    href="/mnjuser/profile"
+                    className="mt-5 block w-full rounded-xl bg-slate-900 py-2.5 text-center text-xs font-bold text-white shadow-lg shadow-slate-200 hover:bg-slate-800 hover:shadow-xl transition-all dark:bg-white dark:text-slate-900 dark:shadow-none dark:hover:bg-slate-200"
+                    suppressHydrationWarning
+                  >
                       Complete Profile
-                  </button>
+                  </Link>
               </div>
 
               <div className="border-t border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
@@ -204,6 +208,7 @@ export default function Homepage() {
                     <button 
                         onClick={handleLogout}
                         className="group flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors dark:text-red-400 dark:hover:bg-red-900/20"
+                        suppressHydrationWarning
                     >
                         <LogOut className="h-5 w-5 text-red-500 group-hover:text-red-600 dark:text-red-400" />
                         Logout
@@ -236,12 +241,15 @@ export default function Homepage() {
                          <p className="text-sm text-slate-600 mt-1 mb-5 max-w-xs dark:text-slate-400">
                             Get 3x more visibility and exclusive job access.
                          </p>
-                         <button className="group relative overflow-hidden rounded-full bg-linear-to-r from-orange-500 to-amber-500 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all">
-                             <span className="relative z-10 flex items-center gap-1">
+                         <Link 
+                           href="/pro_profile"
+                           className="group relative block overflow-hidden rounded-full bg-linear-to-r from-orange-500 to-amber-500 px-6 py-2.5 text-center text-xs font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all"
+                         >
+                             <span className="relative z-10 flex items-center justify-center gap-1">
                                 Become a Pro Member <ChevronRight size={14} />
                              </span>
                              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                         </button>
+                         </Link>
                      </div>
                      <div className="hidden sm:block pl-6 border-l border-orange-200/50 dark:border-orange-800/30">
                          <div className="space-y-3 text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -262,7 +270,12 @@ export default function Homepage() {
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400">Based on your profile and search history</p>
                      </div>
-                     <button className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400">View all</button>
+                     <button 
+                       className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400"
+                       suppressHydrationWarning
+                     >
+                       View all
+                     </button>
                  </div>
                  
                  {/* Horizontal Scroll Container */}
@@ -310,7 +323,10 @@ export default function Homepage() {
                              <p className="text-xs text-purple-100/90">Exclusive opportunities from top tech giants</p>
                          </div>
                      </div>
-                     <button className="rounded-lg bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md hover:bg-white/20 transition-colors border border-white/20">
+                     <button 
+                       className="rounded-lg bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur-md hover:bg-white/20 transition-colors border border-white/20"
+                       suppressHydrationWarning
+                     >
                          View Roles
                      </button>
                  </div>
@@ -449,7 +465,12 @@ const CompanyCard = ({ name, logo, rating, reviews }: any) => {
         <div className="mt-2 flex items-center gap-1 text-[10px] font-semibold text-slate-500">
             <Star className="h-3 w-3 text-orange-400 fill-orange-400" /> {rating} <span className="text-slate-300">|</span> {reviews}
         </div>
-        <button className="mt-3 text-[10px] font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">View jobs</button>
+        <button 
+          className="mt-3 text-[10px] font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+          suppressHydrationWarning
+        >
+          View jobs
+        </button>
     </div>
     );
 };

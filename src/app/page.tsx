@@ -70,7 +70,10 @@ export default function Home() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Limited Offer</p>
                     <p className="text-lg font-bold text-green-600 dark:text-green-400">Flat 50% OFF</p>
                   </div>
-                  <button className="rounded-full bg-slate-900 px-6 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
+                  <button 
+                    className="rounded-full bg-slate-900 px-6 py-2.5 text-sm font-bold text-white transition-transform hover:scale-105 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                    suppressHydrationWarning
+                  >
                     Check Plans
                   </button>
                 </div>
@@ -110,7 +113,10 @@ export default function Home() {
             </div>
 
             <div className="mt-10 text-center">
-              <button className="rounded-full border border-blue-600 px-8 py-2.5 text-sm font-bold text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20">
+              <button 
+                className="rounded-full border border-blue-600 px-8 py-2.5 text-sm font-bold text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                suppressHydrationWarning
+              >
                 View all companies
               </button>
             </div>
@@ -186,7 +192,10 @@ const quickLinks = [
 ];
 
 const QuickChip = ({ icon: Icon, label }: { icon: any; label: string }) => (
-  <button className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-600 hover:shadow-lg hover:shadow-blue-500/5 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-900 dark:hover:text-blue-400">
+  <button 
+    className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-600 hover:shadow-lg hover:shadow-blue-500/5 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-900 dark:hover:text-blue-400"
+    suppressHydrationWarning
+  >
     <Icon className="text-lg text-slate-400 transition-colors group-hover:text-blue-500" />
     <span>{label}</span>
     <FaChevronRight className="text-xs text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-blue-400" />
@@ -312,6 +321,7 @@ const JobSearchForm = () => (
                 type="text" 
                 placeholder="Enter skills / designations / companies" 
                 className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+                suppressHydrationWarning
              />
            </div>
         </div>
@@ -319,7 +329,7 @@ const JobSearchForm = () => (
         {/* Search Input 2 */}
         <div className="relative flex w-64 items-center px-4">
            <div className="flex-1">
-             <select className="w-full cursor-pointer bg-transparent text-sm font-normal text-slate-500 focus:outline-none dark:text-slate-400">
+             <select className="w-full cursor-pointer bg-transparent text-sm font-normal text-slate-500 focus:outline-none dark:text-slate-400" suppressHydrationWarning>
                 <option value="">Select Experience</option>
                 <option value="fresher">Fresher</option>
                 <option value="1">1 Year</option>
@@ -346,6 +356,7 @@ const JobSearchForm = () => (
         <button
           type="button"
           className="rounded-full bg-blue-600 px-10 py-3 text-sm font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
+          suppressHydrationWarning
         >
           Search
         </button>
@@ -362,6 +373,7 @@ const JobSearchForm = () => (
                 type="text" 
                 placeholder="Skills, Designation, Companies" 
                 className="w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white"
+                suppressHydrationWarning
              />
           </div>
           <div className="flex items-center border-b border-slate-100 px-4 py-3 dark:border-slate-800">
@@ -370,11 +382,12 @@ const JobSearchForm = () => (
                 type="text" 
                 placeholder="Location" 
                 className="w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white"
+                suppressHydrationWarning
              />
           </div>
           <div className="flex items-center px-4 py-3">
              <FaBriefcase className="mr-3 text-slate-400" />
-             <select className="w-full bg-transparent text-sm font-medium text-slate-500 focus:outline-none dark:text-slate-400">
+             <select className="w-full bg-transparent text-sm font-medium text-slate-500 focus:outline-none dark:text-slate-400" suppressHydrationWarning>
                 <option value="">Select Experience</option>
                 <option value="fresher">Fresher</option>
                 <option value="1-3">1-3 Years</option>
@@ -388,6 +401,7 @@ const JobSearchForm = () => (
       <button
         type="button"
         className="w-full rounded-xl bg-blue-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/30 active:scale-95"
+        suppressHydrationWarning
       >
         Search Jobs
       </button>

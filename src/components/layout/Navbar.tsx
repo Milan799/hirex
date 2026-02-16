@@ -57,7 +57,7 @@ const navItems = [
   },
 ];
 
-import { FaSearch, FaBell, FaUserCircle } from "react-icons/fa";
+import { FaSearch, FaBell, FaUserCircle, FaBars, FaCrown } from "react-icons/fa";
 import { useAppSelector } from "@/lib/store/hooks";
 import { signOut } from "next-auth/react";
 
@@ -86,6 +86,136 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
     localStorage.clear();
     signOut({ callbackUrl: "/" });
   };
+
+  // --- PRO PROFILE NAVBAR ---
+  if (pathname === "/pro_profile") {
+    return (
+      <motion.header
+        initial={{ y: -24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed inset-x-0 top-0 z-50 border-b border-amber-500/20 bg-slate-950 shadow-lg shadow-amber-900/10"
+      >
+        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          {/* Logo */}
+          <Link href="/mnjuser/homepage" className="group flex items-center gap-2">
+             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 shadow-lg shadow-amber-500/20">
+                <FaCrown className="text-white text-lg" />
+             </div>
+             <span className="flex flex-col leading-tight">
+               <span className="text-xl font-bold tracking-tight text-white">
+                 HireX <span className="text-amber-400">Pro</span>
+               </span>
+             </span>
+          </Link>
+
+          {/* Center Links (Hidden on mobile) */}
+          <div className="hidden items-center gap-8 md:flex">
+             {[
+               { name: "Overview", id: "overview" },
+               { name: "Benefits", id: "benefits" },
+               { name: "Plans", id: "plans" }
+             ].map((item) => (
+               <button 
+                 key={item.id}
+                 onClick={() => {
+                   const el = document.getElementById(item.id);
+                   if (el) el.scrollIntoView({ behavior: 'smooth' });
+                 }}
+                 className="text-sm font-medium text-slate-300 hover:text-amber-400 transition-colors relative group"
+               >
+                 {item.name}
+                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-400 transition-all group-hover:w-full"></span>
+               </button>
+             ))}
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-4">
+             {user ? (
+               <button 
+                 onClick={toggleProfileDrawer}
+                 className="group flex items-center gap-3 rounded-full border border-slate-800 bg-slate-900 py-1 pl-1 pr-4 shadow-sm hover:border-amber-500/50 transition-all"
+               >
+                    <div className="h-8 w-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                        <img 
+                           src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random&color=fff&background=d97706`} 
+                           alt={displayUser.fullName}
+                           className="h-full w-full object-cover" 
+                        />
+                    </div>
+                    <FaBars className="text-slate-400 group-hover:text-amber-400 transition-colors" />
+               </button>
+             ) : (
+               <div className="flex items-center gap-3">
+                 <Link href="/auth/login" className="text-sm font-bold text-slate-300 hover:text-white">Login</Link>
+                 <Link href="/auth/register" className="rounded-full bg-amber-500 px-5 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400 shadow-lg shadow-amber-500/20">
+                    Get Started
+                 </Link>
+               </div>
+             )}
+          </div>
+        </nav>
+        
+        {/* Profile Drawer Integration */}
+        <AnimatePresence>
+          {profileDrawerOpen && (
+              <>
+                  <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setProfileDrawerOpen(false)}
+                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+                  />
+                  <motion.div
+                      initial={{ x: "100%" }}
+                      animate={{ x: 0 }}
+                      exit={{ x: "100%" }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      className="fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-slate-800 bg-slate-950 p-6 shadow-2xl sm:w-100"
+                  >
+                      <button 
+                          onClick={() => setProfileDrawerOpen(false)}
+                          className="absolute right-4 top-4 rounded-full p-2 text-slate-400 hover:bg-slate-900 hover:text-white"
+                      >
+                          <IoClose className="text-2xl" />
+                      </button>
+
+                      {/* Dark Mode Profile Drawer Content */}
+                      <div className="mt-6 flex flex-col items-center text-white">
+                          <div className="relative h-24 w-24 mb-4">
+                              <div className="absolute inset-0 rounded-full border-2 border-amber-500/30"></div>
+                              <div className="absolute inset-2 overflow-hidden rounded-full border-2 border-slate-900">
+                                  <img 
+                                      src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random`} 
+                                      alt={displayUser.fullName}
+                                      className="h-full w-full object-cover" 
+                                  />
+                              </div>
+                          </div>
+                          <h2 className="text-xl font-bold text-white">{displayUser.fullName}</h2>
+                          <p className="text-sm text-slate-400 mt-1">HireX Pro Member</p>
+                          
+                          <Link href="/mnjuser/profile" className="mt-4 rounded-full border border-slate-700 px-6 py-2 text-sm font-bold text-slate-300 hover:bg-slate-900 hover:text-white hover:border-amber-500/50 transition-all">
+                              View Profile
+                          </Link>
+                      </div>
+
+                      <div className="mt-8 space-y-2">
+                          <button 
+                              onClick={handleLogout}
+                              className="flex w-full items-center gap-4 p-3 rounded-lg hover:bg-slate-900 text-red-400 text-left"
+                          >
+                              <span className="font-medium">Logout</span>
+                          </button>
+                      </div>
+                  </motion.div>
+              </>
+          )}
+       </AnimatePresence>
+      </motion.header>
+    );
+  }
 
   // If user is logged in, show a different navbar (Naukri style)
    if ((isMounted && user) || pathname.startsWith("/mnjuser")) {
@@ -171,39 +301,42 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                   </div>
 
                   {/* Centered Search Bar */}
-                  <div className="hidden flex-1 max-w-lg mx-4 md:block">
-                      <div className="flex items-center rounded-full bg-slate-50 border border-slate-200 px-4 py-2 dark:bg-slate-900 dark:border-slate-700">
+                  <div className="hidden flex-1 max-w-2xl mx-4 md:block">
+                      <div className="flex items-center rounded-full bg-slate-50 border border-slate-200 px-2 py-1.5 dark:bg-slate-900 dark:border-slate-700 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+                          <FaSearch className="ml-3 text-slate-400" />
                           <input 
                             suppressHydrationWarning
                             type="text" 
-                            placeholder="Search jobs here" 
-                            className="flex-1 bg-transparent text-sm outline-none text-slate-700 dark:text-slate-200 placeholder:text-slate-400" 
+                            placeholder="Search jobs, companies, skills..." 
+                            className="flex-1 bg-transparent px-3 py-1.5 text-sm outline-none text-slate-700 dark:text-slate-200 placeholder:text-slate-400 font-medium" 
                           />
-                          <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-600 text-white cursor-pointer hover:bg-blue-700">
-                              <FaSearch className="text-xs" />
-                          </div>
+                          <button className="rounded-full bg-blue-600 px-5 py-1.5 text-xs font-bold text-white hover:bg-blue-700 transition-colors shadow-sm">
+                              Search
+                          </button>
                       </div>
                   </div>
 
-                  <div className="flex items-center gap-5">
-                     <button className="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 relative">
-                          <FaBell className="text-xl" />
-                          <span className="absolute -top-1 -right-0.5 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-slate-950"></span>
+                  <div className="flex items-center gap-4">
+                     <button className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-blue-400 relative transition-colors">
+                          <FaBell className="text-lg" />
+                          <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-slate-950"></span>
                      </button>
                      
-                     {/* Profile Button (Hamburger + Avatar) */}
+                     <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
+                     
+                     {/* Profile Button */}
                      <button 
                        onClick={toggleProfileDrawer}
-                       className="group flex items-center gap-3 rounded-full border border-slate-200 p-1 pr-4 transition-all hover:shadow-md dark:border-slate-700"
+                       className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm hover:shadow-md transition-all dark:border-slate-700 dark:bg-slate-900"
                      >
-                          <RxHamburgerMenu className="ml-2 text-slate-600 dark:text-slate-300" />
-                          <div className="h-9 w-9 rounded-full bg-slate-200 overflow-hidden border border-slate-300 dark:border-slate-600">
+                          <div className="h-8 w-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-700">
                               <img 
                                  src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random`} 
                                  alt={displayUser.fullName}
                                  className="h-full w-full object-cover" 
                               />
                           </div>
+                          <FaBars className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
                      </button>
                      
                     {/* Mobile menu toggle */}
@@ -565,4 +698,3 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
     </motion.header>
   );
 }
-
