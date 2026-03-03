@@ -22,6 +22,7 @@ import {
   loginUser,
   registerUser,
   requestOtp,
+  verifyOtp,
   resetPassword,
   setUser,
 } from "@/lib/store/slices/userSlice";
@@ -44,8 +45,9 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   const method = (unwrappedParams.method as AuthMode) || "login"; 
 
   const [mode, setMode] = useState<AuthMode>(method);
-  const [otpStep, setOtpStep] = useState<"request" | "reset">("request");
+  const [otpStep, setOtpStep] = useState<"request" | "verify" | "reset">("request");
   const [forgotEmail, setForgotEmail] = useState<string>("");
+  const [resetToken, setResetToken] = useState<string>("");
   const router = useRouter();
   const dispatch = useAppDispatch();
   const {
@@ -68,9 +70,9 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
     setMounted(true);
   }, []);
 
-  // Keep email in sync on reset step so reset-password always has the right email
+  // Keep email in sync so verify and reset-password always have the right email
   useEffect(() => {
-    if (mode === "forgot" && otpStep === "reset" && forgotEmail) {
+    if (mode === "forgot" && otpStep !== "request" && forgotEmail) {
       setValue("email", forgotEmail);
     }
   }, [mode, otpStep, forgotEmail, setValue]);
@@ -80,16 +82,41 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
     if (newMode !== "forgot") {
       setOtpStep("request");
       setForgotEmail("");
+      setResetToken("");
     }
     router.replace(`/auth/${newMode}`);
     reset();
   };
 
   const getErrorMessage = (err: unknown): string => {
-    if (typeof err === "string") return err;
-    const data = (err as Record<string, unknown>) ?? {};
-    const msg = data.message ?? data.msg ?? data.error;
-    return typeof msg === "string" ? msg : "Something went wrong. Please try again.";
+    let msgStr = "";
+    if (typeof err === "string") {
+      msgStr = err;
+    } else {
+      const data = (err as Record<string, unknown>) ?? {};
+      msgStr = (data.message ?? data.msg ?? data.error) as string;
+    }
+    
+    if (typeof msgStr !== "string") return "Something went wrong. Please try again.";
+
+    // Map technical / generic NextAuth errors to user-friendly messages
+    const errorMap: Record<string, string> = {
+      "Configuration": "We're experiencing a server configuration issue. Please use an alternative login method or try again later.",
+      "AccessDenied": "Access denied. You do not have permission to access this account.",
+      "Verification": "The verification token has expired or is invalid.",
+      "OAuthSignin": "Unable to connect to the social provider. Please try again.",
+      "OAuthCallback": "Unable to complete authentication with the social provider. Please try again.",
+      "OAuthAccountNotLinked": "This email is already associated with another login method. Please sign in using your original account.",
+      "CredentialsSignin": "Incorrect email or password. Please verify your details and try again.",
+      "fetch failed": "Unable to reach the server. Please check your internet connection.",
+      "Network Error": "Network issue detected. Please check your connection and try again."
+    };
+
+    // If a direct map exists, return it. Otherwise if it includes technical jargon, soften it.
+    if (errorMap[msgStr]) return errorMap[msgStr];
+    if (msgStr.includes("Network") || msgStr.includes("fetch")) return errorMap["fetch failed"];
+    
+    return msgStr;
   };
 
   const onSubmit = async (data: AuthFormValues) => {
@@ -98,22 +125,23 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
 
     try {
       if (mode === "login") {
-        const result = await dispatch(
-          loginUser({
-            payload: { email: data.email, password: data.password },
-            onSuccess: (res) => {
-              console.log("Login successful:", res);
-              // notify(res.message || "Login successful!", "success");
-            },
-            onError: (error: any) => {
-              console.log("error",error)
-              notify(getErrorMessage(error), "error");
-            },
-          })
-        ).unwrap();
-        if (result) {
-          router.push("/mnjuser/homepage");
-          router.refresh();
+          const result = await signIn("credentials", {
+            email: data.email,
+            password: data.password,
+            redirect: false
+        });
+        if (result?.error) {
+            const friendlyError = getErrorMessage(result.error);
+            setError("root", { message: friendlyError });
+            notify(friendlyError, "error");
+        } else if (result?.ok) {
+            notify("Login successful!", "success");
+            if (data.role === 'recruiter') {
+               router.push("/employer/dashboard");
+            } else {
+               router.push("/mnjuser/homepage");
+            }
+            router.refresh();
         }
       } else if (mode === "register") {
         const result = await dispatch(
@@ -129,7 +157,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           })
         ).unwrap();
         if (result) {
-          alert("Registration successful! Please log in.");
+          notify("Registration successful! Please log in.", "success");
           switchMode("login");
         }
       } else if (mode === "forgot") {
@@ -142,9 +170,31 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             })
           ).unwrap();
           setForgotEmail(data.email);
-          alert("OTP sent to your email! Enter the code and new password.");
-          setOtpStep("reset");
-        } else {
+          notify("OTP sent to your email! Enter the code to verify.", "success");
+          setOtpStep("verify");
+        } else if (otpStep === "verify") {
+          const emailForReset = forgotEmail || data.email;
+          if (!emailForReset?.trim()) {
+            setError("root", { message: "Email is required. Please go back and request OTP again." });
+            return;
+          }
+          const res = await dispatch(
+            verifyOtp({
+              payload: {
+                email: emailForReset.trim(),
+                otp: (data.otp ?? "").trim(),
+              },
+            })
+          ).unwrap();
+          
+          if (res?.token) {
+             setResetToken(res.token);
+             notify("OTP verified successfully! Please enter your new password.", "success");
+             setOtpStep("reset");
+          } else {
+             throw new Error("Failed to retrieve reset token.");
+          }
+        } else if (otpStep === "reset") {
           const emailForReset = forgotEmail || data.email;
           if (!emailForReset?.trim()) {
             setError("root", { message: "Email is required. Please go back and request OTP again." });
@@ -156,21 +206,22 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
                 email: emailForReset.trim(),
                 otp: (data.otp ?? "").trim(),
                 password: data.password,
+                token: resetToken
               },
               onSuccess: () => {},
               onError: () => {},
             })
           ).unwrap();
-          alert("Password reset successfully! Please log in.");
+          notify("Password reset successfully! Please log in.", "success");
           setOtpStep("request");
           setForgotEmail("");
+          setResetToken("");
           switchMode("login");
         }
       }
     } catch (error: unknown) {
-      // const msg = getErrorMessage(error);
       setError("root", { message: getErrorMessage(error) });
-      // alert(msg);
+      notify(getErrorMessage(error), "error");
     } finally {
       setIsLoading(false);
     }
@@ -185,15 +236,16 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
       });
       
       if (result?.error) {
-        alert(`Social login failed: ${result.error}`);
+        notify(`Social login failed: ${getErrorMessage(result.error)}`, "error");
         setIsLoading(false);
       } else if (result?.ok) {
+        notify("Login successful!", "success");
         router.push("/mnjuser/homepage");
         router.refresh();
       }
     } catch (error: any) {
       console.error("Social login error:", error);
-      alert(`Social login failed: ${error.message || "Please check your provider configuration"}`);
+      notify(`Social login failed: ${error.message || "Please check your provider configuration"}`, "error");
       setIsLoading(false);
     }
   };
@@ -214,86 +266,86 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   return (
     <div className="flex min-h-screen w-full bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
       
-      {/* Desktop Split Layout: Left Image Section */}
+      {/* Left Image Section - Always visible on desktop */}
       <div className="hidden w-1/2 lg:block relative overflow-hidden bg-slate-900">
         <div className="absolute inset-0">
            <img 
-              src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&w=1600&q=80" 
-              alt="Office" 
-              className="h-full w-full object-cover opacity-50 mix-blend-overlay"
+              src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1600&q=80" 
+              alt="Professional Office" 
+              className="h-full w-full object-cover opacity-60 mix-blend-overlay"
            />
-           <div className="absolute inset-0 bg-linear-to-tr from-blue-900/80 to-purple-900/80" />
+           <div className="absolute inset-0 bg-linear-to-br from-blue-900/90 via-slate-900/80 to-indigo-900/90" />
         </div>
         
-        <div className="relative flex h-full flex-col justify-between p-12 text-white">
-           <div className="flex items-center gap-2">
-              <span className="text-3xl font-bold">HireX</span>
+        <div className="relative flex h-full flex-col justify-between p-16 text-white z-10">
+           <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 shadow-lg shadow-blue-500/30">
+                 <span className="text-xl font-bold">H</span>
+              </div>
+              <span className="text-3xl font-extrabold tracking-tight">HireX</span>
            </div>
            
-           <div className="mb-12 space-y-6">
+           <div className="mb-16 max-w-lg space-y-6">
               <motion.div 
-                 initial={{ opacity: 0, x: -20 }}
-                 animate={{ opacity: 1, x: 0 }}
-                 transition={{ delay: 0.2 }}
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ delay: 0.2, duration: 0.8 }}
               >
-                 <h2 className="text-5xl font-bold leading-tight">
-                    Find your dream job <br/> 
-                    <span className="text-blue-400">in record time.</span>
+                 <h2 className="text-5xl font-extrabold leading-tight tracking-tight">
+                    Your next great opportunity, <br/> 
+                    <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent drop-shadow-sm">delivered.</span>
                  </h2>
               </motion.div>
               <motion.p 
                  initial={{ opacity: 0 }}
                  animate={{ opacity: 1 }}
-                 transition={{ delay: 0.4 }}
-                 className="max-w-md text-lg text-slate-300"
+                 transition={{ delay: 0.4, duration: 0.8 }}
+                 className="text-lg text-slate-300 leading-relaxed font-medium"
               >
-                 Join thousands of professionals and top companies connecting daily on the world&#39;s most intuitive recruitment platform.
+                 Join millions of professionals and world-class companies connecting daily on the industry's most powerful recruitment platform.
               </motion.p>
            </div>
            
-           <div className="flex items-center gap-4 text-sm text-slate-400">
-              <span>© 2026 HireX Inc.</span>
-              <span className="h-1 w-1 rounded-full bg-slate-500" />
-              <span>Privacy Policy</span>
-              <span className="h-1 w-1 rounded-full bg-slate-500" />
-              <span>Terms of Service</span>
+           <div className="flex items-center gap-6 text-sm font-medium text-slate-400">
+              <span className="hover:text-white transition-colors cursor-pointer">© 2026 HireX Inc.</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
+              <span className="hover:text-white transition-colors cursor-pointer">Privacy Policy</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
+              <span className="hover:text-white transition-colors cursor-pointer">Terms of Service</span>
            </div>
         </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-blue-500/20 blur-[100px]" />
+        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/20 blur-[100px]" />
       </div>
 
       {/* Right Form Section */}
-      <div className="relative flex min-h-screen w-full items-center justify-center p-4 lg:w-1/2">
-        {/* Mobile Background Mesh - Lower Z-Index */}
-        <div className="absolute inset-0 z-0 lg:hidden pointer-events-none">
-          <div className="absolute -top-[30%] -left-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-600/10" />
-          <div className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] animate-pulse rounded-full bg-purple-400/20 blur-[120px] delay-1000 dark:bg-purple-600/10" />
+      <div className="relative flex min-h-screen w-full items-center justify-center p-6 lg:w-1/2 overflow-y-auto">
+        {/* Mobile Background Mesh */}
+        <div className="absolute inset-0 z-0 lg:hidden pointer-events-none fixed">
+          <div className="absolute -top-[30%] -left-[10%] h-[80vw] w-[80vw] animate-pulse rounded-full bg-blue-400/20 blur-[120px] dark:bg-blue-600/10" />
+          <div className="absolute top-[20%] -right-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-indigo-400/20 blur-[120px] delay-1000 dark:bg-indigo-600/10" />
         </div>
 
-        {/* Auth Card - Higher Z-Index */}
+        {/* Auth Card */}
         <motion.div
           layout
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", damping: 20, stiffness: 100 }}
-          className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-slate-200/60 bg-white/80 p-6 shadow-2xl shadow-blue-500/10 backdrop-blur-xl sm:p-10 dark:border-slate-700/50 dark:bg-slate-900/60 dark:shadow-blue-500/20"
+          transition={{ type: "spring", damping: 25, stiffness: 120 }}
+          className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-white/50 bg-white/70 p-8 shadow-2xl shadow-slate-200/50 backdrop-blur-2xl dark:border-slate-700/50 dark:bg-slate-900/70 dark:shadow-black/50 sm:p-10 my-8"
         >
-          <div className="mb-8 text-center">
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-tr from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/30"
-            >
-              <span className="text-2xl font-bold">H</span>
-            </motion.div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div className="mb-10 text-center">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               {mode === "login" && "Welcome Back"}
               {mode === "register" && "Create Account"}
               {mode === "forgot" && "Reset Password"}
             </h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              {mode === "login" && "Enter your credentials to access your account."}
-              {mode === "register" && "Start your journey with HireX today."}
-              {mode === "forgot" && "We'll help you get back into your account."}
+            <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400">
+              {mode === "login" && "Enter your credentials to access your professional dashboard."}
+              {mode === "register" && "Your next big career move starts right here."}
+              {mode === "forgot" && "No worries, we'll send you a secure link to get back in."}
             </p>
           </div>
 
@@ -307,8 +359,35 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               exit="exit"
               transition={{ type: "spring", stiffness: 100, damping: 25 }}
               onSubmit={handleSubmit(onSubmit)}
-              className="flex flex-col gap-4"
+              className="flex flex-col gap-5"
             >
+              {/* Role Selection Slider */}
+              {(mode === "register" || mode === "login") && (
+                <div className="relative flex w-full rounded-2xl bg-slate-100 p-1 dark:bg-slate-800 shadow-inner">
+                  <div
+                    className="absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-white shadow-sm transition-transform duration-300 ease-in-out dark:bg-slate-700"
+                    style={{ transform: watch("role") === "recruiter" ? "translateX(100%)" : "translateX(0)" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setValue("role", "candidate")}
+                    className={`relative flex-1 py-3 text-sm font-bold transition-colors z-10 ${
+                      watch("role") === "candidate" ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  >
+                    Job Seeker
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setValue("role", "recruiter")}
+                    className={`relative flex-1 py-3 text-sm font-bold transition-colors z-10 ${
+                      watch("role") === "recruiter" ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  >
+                    Recruiter
+                  </button>
+                </div>
+              )}
               {/* Full Name */}
               {mode === "register" && (
                 <InputGroup
@@ -340,7 +419,7 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
               />
 
               {/* OTP Field */}
-              {mode === "forgot" && otpStep === "reset" && (
+              {mode === "forgot" && otpStep === "verify" && (
                 <InputGroup
                   icon={<FaCheckCircle className="text-slate-400 dark:text-slate-500" />}
                   type="text"
@@ -488,21 +567,21 @@ const InputGroup = ({
   return (
     <div className="w-full">
       <div
-        className={`relative flex items-center rounded-xl border bg-white/50 px-4 py-3 transition-all focus-within:bg-white focus-within:ring-blue-500/20 dark:bg-slate-800/50 dark:focus-within:bg-slate-800 ${error ? "border-red-500 ring-4 ring-red-500/10 dark:ring-red-500/20" : "border-slate-200 focus-within:border-blue-500 focus-within:ring-4 dark:border-slate-700"}`}
+        className={`relative flex items-center rounded-2xl border bg-white/60 px-4 py-3.5 transition-all focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-500/10 dark:bg-slate-800/60 dark:focus-within:bg-slate-800 ${error ? "border-red-500 ring-4 ring-red-500/10 dark:ring-red-500/20" : "border-slate-200 focus-within:border-blue-500 focus-within:shadow-sm dark:border-slate-700"}`}
       >
-        <span className="mr-3">{icon}</span>
+        <span className="mr-3 text-lg opacity-80">{icon}</span>
         <input
           {...register(name, validationRules)}
           type={inputType}
           placeholder={placeholder}
           suppressHydrationWarning={true}
-          className="w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+          className="w-full bg-transparent text-[15px] font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="ml-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            className="ml-2 text-slate-400 hover:text-blue-500 transition-colors dark:text-slate-500 dark:hover:text-blue-400"
           >
             {show ? <FaEyeSlash /> : <FaEye />}
           </button>

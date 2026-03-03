@@ -13,55 +13,71 @@ import {
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950 overflow-x-hidden">
-      {/* Background decorations */}
+      {/* Animated Gradient Background decorations */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-[30%] -left-[10%] h-[70vw] w-[70vw] animate-pulse rounded-full bg-blue-400/10 blur-[120px] dark:bg-blue-600/5" />
-        <div className="absolute top-[20%] -right-[10%] h-[60vw] w-[60vw] animate-pulse rounded-full bg-purple-400/10 blur-[120px] delay-1000 dark:bg-purple-600/5" />
+        <div className="absolute -top-[20%] -left-[10%] h-[70vw] w-[70vw] animate-[spin_60s_linear_infinite] rounded-full bg-linear-to-r from-blue-400/20 to-cyan-300/20 blur-[130px] dark:from-blue-600/10 dark:to-cyan-400/10" />
+        <div className="absolute top-[10%] -right-[15%] h-[60vw] w-[60vw] animate-[spin_40s_linear_infinite_reverse] rounded-full bg-linear-to-l from-purple-400/20 to-pink-300/20 blur-[130px] dark:from-purple-600/10 dark:to-pink-400/10" />
       </div>
 
       <PublicNavbar />
 
-      <main className="relative z-10 flex flex-col gap-12 pb-20 pt-16 sm:pt-24">
+      <main className="relative z-10 flex flex-col gap-16 pb-24 pt-16 sm:pt-28">
         
         {/* HERO SECTION */}
         <section className="px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl text-center">
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="inline-flex mb-6 items-center gap-2 rounded-full border border-blue-200/50 bg-blue-50/50 px-4 py-1.5 text-sm font-semibold text-blue-700 backdrop-blur-md dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-300"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              Over 500,000+ Active Jobs
+            </motion.div>
+
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl"
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl lg:text-7xl drop-shadow-sm"
             >
-              Find your <span className="text-blue-600 dark:text-blue-400">dream job</span> now
+              Find your <span className="bg-linear-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent drop-shadow-md">dream job</span> now
             </motion.h1>
+            
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-4 text-lg text-slate-600 dark:text-slate-400"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-400"
             >
-              5 lakh+ jobs for you to explore
+              Join the fastest-growing professional network. Browse exclusive roles, track applications, and accelerate your career.
             </motion.p>
 
             {/* SEARCH BAR */}
-            <div className="mt-10">
+            <div className="mt-12 relative z-20">
               <JobSearchForm />
             </div>
 
-            {/* PROMO CARD (Naukri FastForward Style) */}
+            {/* PROMO CARD - Glassmorphism */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-              className="mx-auto mt-12 max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/50 ring-1 ring-slate-200 dark:bg-slate-900 dark:shadow-slate-900/50 dark:ring-slate-800"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+              className="mx-auto mt-16 max-w-4xl overflow-hidden rounded-3xl border border-white/40 bg-white/60 p-1 shadow-2xl shadow-blue-500/10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/60 dark:shadow-blue-900/20"
             >
-              <div className="flex flex-col sm:flex-row">
-                <div className="flex-1 bg-linear-to-br from-blue-50 to-indigo-50 p-6 text-left dark:from-blue-900/20 dark:to-indigo-900/20">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-xl text-white">🚀</span>
+              <div className="flex flex-col sm:flex-row h-full rounded-2xl overflow-hidden relative">
+                <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 to-purple-500/10 pointer-events-none"></div>
+                <div className="flex-1 p-8 text-left z-10">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-2xl text-white shadow-lg shadow-blue-500/30">🚀</div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">FastTrack Your Career</h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Get 3x more recruiter views with our premium services.</p>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">FastTrack Your Career</h3>
+                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Get 3x more recruiter views with our premium AI-driven resume boosting services.</p>
                     </div>
                   </div>
                 </div>
@@ -134,12 +150,12 @@ export default function Home() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-             <JobHighlight title="Senior Frontend Engineer" company="PixelStack Labs" location="Bengaluru" type="Full-time" />
+             <JobHighlight title="Full Stack Developer (Next.js)" company="PixelStack Labs" location="Bengaluru" type="Full-time" />
              <JobHighlight title="Product Manager - Payments" company="NorthBridge Fintech" location="Gurugram" type="Hybrid" />
              <JobHighlight title="Lead UX Designer" company="Aurora Systems" location="Mumbai" type="Remote" />
              <JobHighlight title="Backend Developer (Go)" company="CloudBridge" location="Pune" type="Full-time" />
-             <JobHighlight title="Data Analyst" company="NovaStack" location="Hyderabad" type="Hybrid" />
-             <JobHighlight title="HR Business Partner" company="HireX" location="Delhi" type="Contract" />
+             <JobHighlight title="Data Scientist" company="NovaStack AI" location="Hyderabad" type="Hybrid" />
+             <JobHighlight title="HR Business Partner" company="HireX Internal" location="Delhi" type="Contract" />
           </div>
         </section>
 
@@ -295,8 +311,10 @@ const CompanyCard = ({ name, type, logo }: { name: string; type: string; logo?: 
           <h3 className="font-bold text-slate-900 dark:text-white">{name}</h3>
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{type}</p>
        </div>
-       <div className="opacity-0 transition-opacity group-hover:opacity-100">
-         <span className="text-xs font-bold text-blue-600 dark:text-blue-400">View Jobs</span>
+       <div className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+         <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+           View Jobs <FaChevronRight className="text-[10px]" />
+         </span>
        </div>
     </div>
   );
@@ -314,23 +332,23 @@ const JobSearchForm = () => (
       <div className="flex flex-row items-center divide-x divide-slate-200 dark:divide-slate-800">
         
         {/* Search Input 1 */}
-        <div className="relative flex flex-1 items-center px-4">
-           <FaSearch className="mr-3 text-slate-400" />
+        <div className="relative flex flex-[1.5] items-center px-5">
+           <FaSearch className="mr-3 text-blue-500" />
            <div className="flex-1">
              <input 
                 type="text" 
-                placeholder="Enter skills / designations / companies" 
-                className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+                placeholder="Skills, designations, companies..." 
+                className="w-full bg-transparent text-[15px] font-semibold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
                 suppressHydrationWarning
              />
            </div>
         </div>
 
         {/* Search Input 2 */}
-        <div className="relative flex w-64 items-center px-4">
+        <div className="relative flex w-56 items-center px-5 group-hover/form:bg-slate-50/50 transition-colors dark:group-hover/form:bg-slate-800/50">
            <div className="flex-1">
-             <select className="w-full cursor-pointer bg-transparent text-sm font-normal text-slate-500 focus:outline-none dark:text-slate-400" suppressHydrationWarning>
-                <option value="">Select Experience</option>
+             <select className="w-full cursor-pointer bg-transparent text-[15px] font-medium text-slate-600 focus:outline-none dark:text-slate-400" suppressHydrationWarning>
+                <option value="">Experience</option>
                 <option value="fresher">Fresher</option>
                 <option value="1">1 Year</option>
                 <option value="2">2 Years</option>
@@ -342,23 +360,23 @@ const JobSearchForm = () => (
         </div>
 
         {/* Search Input 3 */}
-        <div className="relative flex flex-1 items-center px-4">
+        <div className="relative flex flex-1 items-center px-5 group-hover/form:bg-slate-50/50 transition-colors dark:group-hover/form:bg-slate-800/50">
            <FaMapMarkerAlt className="mr-3 text-slate-400" />
            <div className="flex-1">
              <input 
                 type="text" 
-                placeholder="Enter location" 
-                className="w-full bg-transparent text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
+                placeholder="Location" 
+                className="w-full bg-transparent text-[15px] font-semibold text-slate-900 placeholder:font-medium placeholder:text-slate-400 focus:outline-none dark:text-white dark:placeholder:text-slate-500"
              />
            </div>
         </div>
 
         <button
           type="button"
-          className="rounded-full bg-blue-600 px-10 py-3 text-sm font-bold text-white transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
+          className="rounded-full bg-linear-to-r m-1 from-blue-600 to-indigo-600 px-10 py-3.5 text-sm font-bold text-white transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95"
           suppressHydrationWarning
         >
-          Search
+          Search Jobs
         </button>
       </div>
     </div>

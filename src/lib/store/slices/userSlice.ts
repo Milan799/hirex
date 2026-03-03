@@ -12,27 +12,24 @@ const AUTH_ENDPOINTS = {
   resetPassword: `${AUTH_BASE}/reset-password`,
 } as const;
 
-export const fetchProfile = createAsyncThunk(
+export const fetchCurrentUser = createAsyncThunk(
   "user/profile",
   async (
-    { payload, onSuccess, onError }: { payload?: object; onSuccess?: (d: unknown) => void; onError?: (e: unknown) => void },
+    _,
     { rejectWithValue }
   ) => {
     try {
-      const res = await axiosClient.get("/posts", { params: payload });
-      onSuccess?.(res.data);
+      const res = await axiosClient.get("/profile");
       return res.data;
     } catch (err: unknown) {
       const e = err as { message?: string; response?: { data?: unknown } };
       if (e.message === "UNAUTHORIZED") {
         return rejectWithValue("Session expired");
       }
-      onError?.(err);
       return rejectWithValue(e.response?.data);
     }
   }
 );
-
 export const loginUser = createAsyncThunk(
   "user/login",
   async (
@@ -157,14 +154,20 @@ export const resetPassword = createAsyncThunk(
       onSuccess,
       onError,
     }: {
-      payload: { email: string; otp: string; password: string };
+      payload: { email: string; otp: string; password: string; token?: string };
       onSuccess?: (d: unknown) => void;
       onError?: (e: unknown) => void;
     },
     { rejectWithValue }
   ) => {
     try {
-      const res = await axiosClient.post(AUTH_ENDPOINTS.resetPassword, payload);
+      // Create a clean payload mapping for the new verifyResetToken backend design
+      const body = {
+        newPassword: payload.password,
+        token: payload.token
+      };
+
+      const res = await axiosClient.post(AUTH_ENDPOINTS.resetPassword, body);
       onSuccess?.(res.data);
       return res.data;
     } catch (err: unknown) {
@@ -177,22 +180,30 @@ export const resetPassword = createAsyncThunk(
 
 const userSlice = createSlice({
   name: "user",
-  initialState: { data: null, status: "idle" },
-  reducers: {},
+  initialState: { data: null as any, status: "idle" },
+  reducers: {
+    setUser: (state, action) => {
+      state.data = action.payload;
+    },
+    clearUser: (state) => {
+      state.data = null;
+      state.status = "idle";
+    }
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProfile.pending, (state) => {
+      .addCase(fetchCurrentUser.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(fetchProfile.fulfilled, (state, action) => {
+      .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.data = action.payload;
         state.status = "succeeded";
       })
-      .addCase(fetchProfile.rejected, (state) => {
+      .addCase(fetchCurrentUser.rejected, (state) => {
         state.status = "failed";
       });
   },
 });
 
-export const { setUser } = userSlice.actions;
+export const { setUser, clearUser } = userSlice.actions;
 export default userSlice.reducer;

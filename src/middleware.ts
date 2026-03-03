@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth/auth";
 
-export function middleware(request:any) {
+export async function middleware(request: any) {
   const { pathname } = request.nextUrl;
 
   const protectedRoutes = [
@@ -8,10 +9,10 @@ export function middleware(request:any) {
     "/profile",
     "/admin",
     "/settings",
+    "/employer",
   ];
 
-  const accessToken = request.cookies.get("accessToken")?.value;
-  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const session = await auth();
 
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
@@ -20,17 +21,22 @@ export function middleware(request:any) {
   const isAuthRoute = pathname.startsWith("/auth/login");
 
   // ❌ If trying to access protected route without token → go to login
-  if (isProtectedRoute && !accessToken) {
+  if (isProtectedRoute && !session) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
   }
 
-  // ✅ NEW RULE:
-  // If user is already logged in and tries to visit login page → send to dashboard
-  if (isAuthRoute && accessToken) {
+  // If user is already logged in and tries to visit login page → send to their exact dashboard
+  if (isAuthRoute && session) {
+    const userRole = session.user?.role;
     const url = request.nextUrl.clone();
-    url.pathname = "/mnjuser/homepage";
+    
+    if (userRole === "recruiter") {
+      url.pathname = "/employer/dashboard";
+    } else {
+      url.pathname = "/mnjuser/homepage";
+    }
     return NextResponse.redirect(url);
   }
   return NextResponse.next();
@@ -42,6 +48,7 @@ export const config = {
     "/profile/:path*",
     "/admin/:path*",
     "/settings/:path*",
+    "/employer/:path*",
     "/auth/login",
   ],
 };

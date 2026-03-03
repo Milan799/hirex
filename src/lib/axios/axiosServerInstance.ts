@@ -8,8 +8,8 @@ const axiosServer = axios.create({
   timeout: 20000,
 });
 
-axiosServer.interceptors.request.use((config) => {
-  const cookieStore = cookies();
+axiosServer.interceptors.request.use(async (config) => {
+  const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
   if (token) {

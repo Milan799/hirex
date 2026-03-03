@@ -17,6 +17,8 @@ interface JobCardProps {
   postedAt: string;
   logo?: string;
   applicants?: number;
+  id?: string;
+  onApply?: (id: string) => void;
 }
 
 export function JobCard({
@@ -32,6 +34,8 @@ export function JobCard({
   postedAt,
   logo,
   applicants = 100,
+  id,
+  onApply
 }: JobCardProps) {
   const [imgError, setImgError] = useState(false);
   const [imgSrc, setImgSrc] = useState(logo);
@@ -119,8 +123,18 @@ export function JobCard({
           <FaHistory />
           <span>{postedAt}</span>
         </div>
-        <div className="text-xs font-semibold text-slate-400">
-          {applicants} Applicants
+        <div className="flex items-center gap-4">
+          <div className="text-xs font-semibold text-slate-400">
+            {applicants} Applicants
+          </div>
+          {id && onApply && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onApply(id); }}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-blue-700 active:scale-95"
+            >
+              Apply Now
+            </button>
+          )}
         </div>
       </div>
     </motion.div>

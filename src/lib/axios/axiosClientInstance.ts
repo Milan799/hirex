@@ -4,9 +4,7 @@ import axios from "axios";
 import { attachAbortController, clearAbortController } from "./abortManager";
 import { handleLogout } from "./logout";
 
-// Base URL only (e.g. http://localhost:5000) for /api/* routes; strip /api/auth if present
-const raw = process.env.NEXT_PUBLIC_API_URL || "";
-const baseURL = raw.replace(/\/api\/auth\/?$/, "") || raw;
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 const axiosClient = axios.create({
   baseURL,
@@ -14,13 +12,16 @@ const axiosClient = axios.create({
   timeout: 20000,
 });
 
-// REQUEST
-axiosClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
+import { getSession } from "next-auth/react";
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+axiosClient.interceptors.request.use(
+  async (config) => {
+    // Only attempt to get NextAuth session on the client side
+    if (typeof window !== "undefined") {
+      const session: any = await getSession();
+      if (session && session.accessToken) {
+        config.headers.Authorization = `Bearer ${session.accessToken}`;
+      }
     }
 
     return attachAbortController(config);
@@ -52,6 +53,11 @@ axiosClient.interceptors.response.use(
 
     if ((status === 401 || status === 403) && !isPublicAuthRequest(requestUrl)) {
       handleLogout();
+    }
+
+    // Extract the clean backend error message so Redux doesn't swallow it
+    if (error.response && error.response.data) {
+      return Promise.reject(error.response.data);
     }
 
     return Promise.reject(error);

@@ -21,13 +21,13 @@ export default function AboutPage() {
           transition={{ type: "spring", stiffness: 100, damping: 22 }}
           className="max-w-3xl space-y-4"
         >
-          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
             How HireX works
           </h1>
-          <p className="text-sm text-slate-300 sm:text-base">
+          <p className="text-sm text-slate-700 dark:text-slate-300 sm:text-base">
             HireX is a modern job hunting platform where{" "}
-            <span className="font-semibold text-slate-100">candidates</span> and{" "}
-            <span className="font-semibold text-slate-100">recruiters</span> share the same clean,
+            <span className="font-semibold text-slate-900 dark:text-slate-100">candidates</span> and{" "}
+            <span className="font-semibold text-slate-900 dark:text-slate-100">recruiters</span> share the same clean,
             animated experience. Everything you see here is powered by Next.js, NextAuth, MongoDB,
             and a custom design system tuned for clarity and focus.
           </p>
@@ -75,12 +75,12 @@ type DetailCardProps = {
 };
 
 const DetailCard = ({ title, points }: DetailCardProps) => (
-  <div className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-4 shadow-xl shadow-blue-500/10 backdrop-blur-xl">
-    <h2 className="text-sm font-semibold text-white">{title}</h2>
-    <ul className="mt-3 space-y-2 text-[11px] text-slate-300 sm:text-xs">
+  <div className="rounded-3xl border border-slate-200 bg-white/70 p-4 shadow-xl shadow-blue-500/10 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/70">
+    <h2 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h2>
+    <ul className="mt-3 space-y-2 text-[11px] text-slate-600 dark:text-slate-300 sm:text-xs">
       {points.map((p) => (
         <li key={p} className="flex gap-2">
-          <span className="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-cyan-400" />
+          <span className="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-cyan-500 dark:bg-cyan-400" />
           <span>{p}</span>
         </li>
       ))}

@@ -11,6 +11,35 @@ export interface IUser extends Document {
   updatedAt: Date;
   resetOtp?: string;
   resetOtpExpires?: Date;
+
+  // Enhance Profile Fields
+  phone?: string;
+  location?: string;
+  about?: string;
+
+  // For Candidates
+  skills?: string[];
+  experience?: {
+    title: string;
+    company: string;
+    startDate: Date;
+    endDate?: Date;
+    current: boolean;
+    description?: string;
+  }[];
+  education?: {
+    degree: string;
+    institution: string;
+    startDate: Date;
+    endDate?: Date;
+    current: boolean;
+  }[];
+  resumeUrl?: string;
+
+  // For Recruiters
+  companyName?: string;
+  companyWebsite?: string;
+
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -50,6 +79,33 @@ const UserSchema = new Schema<IUser, UserModel>(
       type: Date,
       required: false,
     },
+    // Enhanced profile fields
+    phone: String,
+    location: String,
+    about: String,
+    skills: { type: [String], default: [] },
+    experience: [
+      {
+        title: String,
+        company: String,
+        startDate: Date,
+        endDate: Date,
+        current: { type: Boolean, default: false },
+        description: String,
+      },
+    ],
+    education: [
+      {
+        degree: String,
+        institution: String,
+        startDate: Date,
+        endDate: Date,
+        current: { type: Boolean, default: false },
+      },
+    ],
+    resumeUrl: String,
+    companyName: String,
+    companyWebsite: String,
   },
   {
     timestamps: true,

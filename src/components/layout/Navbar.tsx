@@ -57,9 +57,43 @@ const navItems = [
   },
 ];
 
-import { FaSearch, FaBell, FaUserCircle, FaBars, FaCrown } from "react-icons/fa";
-import { useAppSelector } from "@/lib/store/hooks";
-import { signOut } from "next-auth/react";
+const recruiterNavItems = [
+  {
+    href: "/employer/dashboard",
+    label: "Dashboard",
+    columns: [
+      {
+        title: "Overview",
+        items: ["Analytics", "Active Jobs", "Recent Applications", "Account Billing"]
+      }
+    ]
+  },
+  {
+    href: "/employer/jobs/new",
+    label: "Post a Job",
+    columns: [
+      {
+        title: "Hiring Solutions",
+        items: ["Standard Posting", "Premium Posting", "Bulk Hiring", "Internships"]
+      }
+    ]
+  },
+  {
+    href: "/employer/candidates",
+    label: "Candidates",
+    columns: [
+      {
+        title: "Sourcing",
+        items: ["Search Resumes", "Saved Candidates", "AI Matching", "Campus Hiring"]
+      }
+    ]
+  }
+];
+
+import { FaSearch, FaBell, FaUserCircle, FaBars, FaCrown, FaNewspaper, FaCog, FaQuestionCircle, FaSignOutAlt, FaChevronRight } from "react-icons/fa";
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
+import { clearUser } from "@/lib/store/slices/userSlice";
+import { signOut, useSession } from "next-auth/react";
 
 // ... existing code ...
 
@@ -68,22 +102,36 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
   const [open, setOpen] = useState(false);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
-  const { data: user } = useAppSelector((state) => state.user);
+  const { data: session } = useSession();
+  const { data: userResponse } = useAppSelector((state) => state.user);
+  
+  // Try retrieving user from Session first (more reliable on hard reloads), fallback to Redux state
+  const user = session?.user || userResponse?.user || userResponse;
   
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     setIsMounted(true);
   }, []);
   
-  // Fallback for user data if not yet loaded but on protected route
-  const displayUser = (isMounted && user) || { fullName: "Guest User", role: "Job Seeker" };
+  // Initialize displayUser to null initially
+  const [displayUser, setDisplayUser] = useState<any>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (user) {
+      setDisplayUser(user);
+    }
+  }, [user]);
 
   const toggle = () => setOpen((v) => !v);
   const close = () => setOpen(false);
   const toggleProfileDrawer = () => setProfileDrawerOpen((v) => !v);
 
+  const dispatch = useAppDispatch();
+
   const handleLogout = () => {
     localStorage.clear();
+    dispatch(clearUser());
     signOut({ callbackUrl: "/" });
   };
 
@@ -93,7 +141,7 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
       <motion.header
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="fixed inset-x-0 top-0 z-50 border-b border-amber-500/20 bg-slate-950 shadow-lg shadow-amber-900/10"
+        className="fixed inset-x-0 top-0 z-50 border-b border-amber-500/20 bg-slate-950/80 backdrop-blur-md shadow-lg shadow-amber-900/10"
       >
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           {/* Logo */}
@@ -131,15 +179,15 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-             {user ? (
+             {isMounted && user ? (
                <button 
                  onClick={toggleProfileDrawer}
                  className="group flex items-center gap-3 rounded-full border border-slate-800 bg-slate-900 py-1 pl-1 pr-4 shadow-sm hover:border-amber-500/50 transition-all"
                >
                     <div className="h-8 w-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
                         <img 
-                           src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random&color=fff&background=d97706`} 
-                           alt={displayUser.fullName}
+                           src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random&color=fff&background=d97706`} 
+                           alt={displayUser?.fullName || "Guest"}
                            className="h-full w-full object-cover" 
                         />
                     </div>
@@ -147,8 +195,8 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                </button>
              ) : (
                <div className="flex items-center gap-3">
-                 <Link href="/auth/login" className="text-sm font-bold text-slate-300 hover:text-white">Login</Link>
-                 <Link href="/auth/register" className="rounded-full bg-amber-500 px-5 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400 shadow-lg shadow-amber-500/20">
+                 <Link href="/auth/login" className="text-sm font-bold text-slate-300 hover:text-white transition-colors">Login</Link>
+                 <Link href="/auth/register" className="rounded-full bg-linear-to-r from-amber-400 to-amber-600 px-5 py-2 text-xs font-bold text-slate-900 shadow-lg shadow-amber-500/20 hover:scale-105 hover:shadow-amber-500/40 transition-all duration-300">
                     Get Started
                  </Link>
                </div>
@@ -187,13 +235,13 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                               <div className="absolute inset-0 rounded-full border-2 border-amber-500/30"></div>
                               <div className="absolute inset-2 overflow-hidden rounded-full border-2 border-slate-900">
                                   <img 
-                                      src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random`} 
-                                      alt={displayUser.fullName}
+                                      src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                                      alt={displayUser?.fullName || "Guest"}
                                       className="h-full w-full object-cover" 
                                   />
                               </div>
                           </div>
-                          <h2 className="text-xl font-bold text-white">{displayUser.fullName}</h2>
+                          <h2 className="text-xl font-bold text-white">{displayUser?.fullName || "Guest"}</h2>
                           <p className="text-sm text-slate-400 mt-1">HireX Pro Member</p>
                           
                           <Link href="/mnjuser/profile" className="mt-4 rounded-full border border-slate-700 px-6 py-2 text-sm font-bold text-slate-300 hover:bg-slate-900 hover:text-white hover:border-amber-500/50 transition-all">
@@ -217,31 +265,38 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
     );
   }
 
-  // If user is logged in, show a different navbar (Naukri style)
-   if ((isMounted && user) || pathname.startsWith("/mnjuser")) {
+   // If user is logged in (either through Session or Redux), show the authenticated navbar
+   if (isMounted && (session?.user || user)) {
+       const isRecruiter = user?.role === "recruiter";
+       const activeNavItems = isRecruiter ? recruiterNavItems : navItems;
+       const homeUrl = isRecruiter ? "/employer/dashboard" : "/mnjuser/homepage";
+
        return (
          <>
          <motion.header
              initial={{ y: -24, opacity: 0 }}
              animate={{ y: 0, opacity: 1 }}
-             className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
+             className={`fixed inset-x-0 top-0 z-30 border-b bg-white/80 backdrop-blur-md shadow-sm dark:bg-slate-950/80 ${
+               isRecruiter ? "border-purple-200 dark:border-purple-900/50" : "border-slate-200 dark:border-slate-800"
+             }`}
          >
               <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
                   <div className="flex items-center gap-8">
-                     <Link href="/mnjuser/homepage" className="group flex items-center gap-2" onClick={close}>
+                     <Link href={homeUrl} className="group flex items-center gap-2" onClick={close}>
                         <span className="flex flex-col leading-tight">
                           <motion.span
                             whileHover={{ scale: 1.03 }}
                             transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                            className="bg-linear-to-r from-sky-500 via-blue-500 to-cyan-400 bg-clip-text text-xl font-bold tracking-tight text-transparent"
+                            className={`bg-linear-to-r ${isRecruiter ? 'from-purple-500 via-fuchsia-500 to-pink-500' : 'from-sky-500 via-blue-500 to-cyan-400'} bg-clip-text text-xl font-bold tracking-tight text-transparent`}
                           >
                             Hire<span className="text-slate-950 dark:text-slate-50">X</span>
+                            {isRecruiter && <span className="text-[10px] uppercase ml-1 px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 transform -translate-y-2 inline-block">Employer</span>}
                           </motion.span>
                         </span>
                      </Link>
                      
                      <div className="hidden h-full items-center gap-1 md:flex" onMouseLeave={() => setHoveredNav(null)}>
-                        {navItems.map((link) => {
+                        {activeNavItems.map((link) => {
                           const isActive = pathname.startsWith(link.href);
                           const isHovered = hoveredNav === link.label;
 
@@ -255,12 +310,12 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                                   href={link.href}
                                   className={`group relative flex items-center gap-1 px-3 py-3 text-sm font-medium transition-colors duration-200 ${
                                     isActive || isHovered
-                                      ? "text-blue-600 dark:text-blue-400" 
+                                      ? (isRecruiter ? "text-purple-600 dark:text-purple-400" : "text-blue-600 dark:text-blue-400") 
                                       : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                                   }`}
                                 >
                                   {link.label}
-                                  {link.label === "Services" && (
+                                  {link.label === "Services" && !isRecruiter && (
                                     <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">1</span>
                                   )}
                                 </Link>
@@ -273,7 +328,9 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                                       animate={{ opacity: 1, y: 0 }}
                                       exit={{ opacity: 0, y: 10 }}
                                       transition={{ duration: 0.2 }}
-                                      className="absolute left-0 top-full z-50 mt-1 w-150 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-950 dark:shadow-slate-900/50"
+                                      className={`absolute left-0 top-full z-50 mt-1 w-150 overflow-hidden rounded-xl border bg-white/95 backdrop-blur-xl shadow-2xl dark:bg-slate-950/95 dark:shadow-slate-900/50 ${
+                                        isRecruiter ? "border-purple-200 shadow-purple-200/50 dark:border-purple-900/50" : "border-slate-200 shadow-slate-200/50 dark:border-slate-800"
+                                      }`}
                                     >
                                       <div className="flex p-6">
                                          {link.columns.map((col, idx) => (
@@ -282,7 +339,7 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                                               <ul className="space-y-2">
                                                  {col.items.map(item => (
                                                    <li key={item}>
-                                                      <Link href="#" className="text-sm text-slate-600 hover:text-blue-600 hover:underline dark:text-slate-400 dark:hover:text-blue-400">
+                                                      <Link href="#" className={`text-sm text-slate-600 hover:underline dark:text-slate-400 ${isRecruiter ? 'hover:text-purple-600 dark:hover:text-purple-400' : 'hover:text-blue-600 dark:hover:text-blue-400'}`}>
                                                         {item}
                                                       </Link>
                                                    </li>
@@ -331,8 +388,8 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                      >
                           <div className="h-8 w-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-700">
                               <img 
-                                 src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random`} 
-                                 alt={displayUser.fullName}
+                                 src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                                 alt={displayUser?.fullName || "Guest"}
                                  className="h-full w-full object-cover" 
                               />
                           </div>
@@ -361,15 +418,19 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
                     transition={{ type: "spring", stiffness: 180, damping: 20 }}
-                    className="border-t border-slate-200/70 bg-white/95 shadow-lg shadow-slate-200/70 dark:border-slate-800/60 dark:bg-slate-950/95 md:hidden"
+                    className={`border-t bg-white/95 shadow-lg dark:bg-slate-950/95 md:hidden ${
+                      isRecruiter ? "border-purple-200/70 shadow-purple-200/70 dark:border-purple-800/60" : "border-slate-200/70 shadow-slate-200/70 dark:border-slate-800/60"
+                    }`}
                   >
                     <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 pb-5 pt-3 sm:px-6 lg:px-8">
-                      {navItems.map((link) => (
+                      {activeNavItems.map((link) => (
                         <Link
                           key={link.href}
                           href={link.href}
                           onClick={close}
-                          className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white"
+                          className={`rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white ${
+                            isRecruiter ? "hover:text-purple-900" : "hover:text-slate-900"
+                          }`}
                         >
                           {link.label}
                         </Link>
@@ -378,14 +439,14 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                       <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
                       
                       <div className="mt-2 flex gap-3 px-1 items-center">
-                         <div className="h-8 w-8 rounded-full overflow-hidden">
+                         <div className="h-8 w-8 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100">
                               <img 
-                                 src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random`} 
-                                 alt={displayUser.fullName}
+                                 src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                                 alt={displayUser?.fullName || "Guest"}
                                  className="h-full w-full object-cover" 
                               />
                          </div>
-                         <span className="text-sm font-bold text-slate-900 dark:text-white">{displayUser.fullName}</span>
+                         <span className="text-sm font-bold text-slate-900 dark:text-white">{displayUser?.fullName || "Guest"}</span>
                       </div>
                     </div>
                   </motion.div>
@@ -421,7 +482,7 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                         <div className="mt-6 flex flex-col items-center">
                             {/* Circular Progress Avatar */}
                             <div className="relative h-24 w-24 mb-4">
-                                <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                               <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
                                     <path
                                         className="text-slate-100 dark:text-slate-800"
                                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -430,8 +491,8 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                                         strokeWidth="2"
                                     />
                                     <path
-                                        className="text-orange-400 drop-shadow-sm"
-                                        strokeDasharray="53, 100"
+                                        className={`${isRecruiter ? 'text-purple-500' : 'text-orange-400'} drop-shadow-sm`}
+                                        strokeDasharray={isRecruiter ? "100, 100" : "53, 100"}
                                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                         fill="none"
                                         stroke="currentColor"
@@ -441,75 +502,114 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                                 </svg>
                                 <div className="absolute inset-2 overflow-hidden rounded-full border-2 border-white dark:border-slate-900">
                                     <img 
-                                        src={`https://ui-avatars.com/api/?name=${displayUser.fullName}&background=random`} 
-                                        alt={displayUser.fullName}
+                                        src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                                        alt={displayUser?.fullName || "Guest"}
                                         className="h-full w-full object-cover" 
                                     />
                                 </div>
-                                <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-700 shadow-md dark:bg-slate-800 dark:text-slate-200">
-                                    53%
-                                </span>
+                                {!isRecruiter && (
+                                  <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-700 shadow-md dark:bg-slate-800 dark:text-slate-200">
+                                      53%
+                                  </span>
+                                )}
                             </div>
 
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{displayUser.fullName}</h2>
-                            <p className="text-sm text-slate-500 mt-1 dark:text-slate-400 text-center">MCA Computers at Sarvajanik College of Engineering and Technology, Surat</p>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{displayUser?.fullName || "Guest"}</h2>
+                            <p className="text-sm text-slate-500 mt-1 dark:text-slate-400 text-center">
+                              {isRecruiter ? "Employer Account" : "MCA Computers at Sarvajanik College of Engineering and Technology, Surat"}
+                            </p>
                             
-                            <Link href="/mnjuser/profile" className="mt-3 text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">
+                            <Link href={isRecruiter ? "/employer/profile" : "/mnjuser/profile"} className={`mt-3 text-sm font-bold hover:underline ${isRecruiter ? "text-purple-600 dark:text-purple-400" : "text-blue-600 dark:text-blue-400"}`}>
                                 View & Update Profile
                             </Link>
                         </div>
 
-                        {/* Pro Banner */}
-                        <div className="mt-8 rounded-xl bg-linear-to-r from-orange-50 to-amber-50 p-4 border border-orange-100 dark:from-orange-900/20 dark:to-amber-900/20 dark:border-orange-900/40 flex items-center justify-between cursor-pointer hover:shadow-sm transition-shadow">
-                            <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full bg-[#dfae47] flex items-center justify-center text-white">
-                                    <span className="text-lg">👑</span>
-                                </div>
-                                <span className="font-bold text-sm text-slate-800 dark:text-slate-200">Upgrade to Naukri Pro</span>
-                            </div>
-                            <IoChevronDown className="text-slate-400 -rotate-90" />
-                        </div>
+                        {/* Pro Banner - Only for Candidates */}
+                        {!isRecruiter && (
+                          <div className="mt-8 rounded-xl bg-linear-to-r from-orange-50 to-amber-50 p-4 border border-orange-100 dark:from-orange-900/20 dark:to-amber-900/20 dark:border-orange-900/40 flex items-center justify-between cursor-pointer hover:shadow-sm transition-shadow">
+                              <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-[#dfae47] flex items-center justify-center text-white">
+                                      <span className="text-lg">👑</span>
+                                  </div>
+                                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">Upgrade to Naukri Pro</span>
+                              </div>
+                              <IoChevronDown className="text-slate-400 -rotate-90" />
+                          </div>
+                        )}
 
-                        {/* Profile Performance */}
+                        {/* Profile/Company Performance */}
                         <div className="mt-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-slate-900 dark:text-white">Your profile performance</h3>
+                                <h3 className="font-bold text-slate-900 dark:text-white">{isRecruiter ? "Hiring Overview" : "Your profile performance"}</h3>
                                 <span className="text-xs text-slate-400">Last 90 days</span>
                             </div>
                             <div className="grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
                                 <div className="text-center border-r border-slate-200 dark:border-slate-800">
                                     <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
-                                    <p className="text-xs text-slate-500 mt-1">Search Appearances</p>
-                                    <button className="mt-2 text-xs font-bold text-blue-600 hover:underline">View all</button>
+                                    <p className="text-xs text-slate-500 mt-1">{isRecruiter ? "Active Postings" : "Search Appearances"}</p>
+                                    <button className={`mt-2 text-xs font-bold hover:underline ${isRecruiter ? "text-purple-600" : "text-blue-600"}`}>View all</button>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
-                                    <p className="text-xs text-slate-500 mt-1">Recruiter Actions</p>
-                                    <button className="mt-2 text-xs font-bold text-blue-600 hover:underline">View all</button>
+                                    <p className="text-xs text-slate-500 mt-1">{isRecruiter ? "New Applicants" : "Recruiter Actions"}</p>
+                                    <button className={`mt-2 text-xs font-bold hover:underline ${isRecruiter ? "text-purple-600" : "text-blue-600"}`}>View all</button>
                                 </div>
                             </div>
                         </div>
 
                         {/* Menu Links */}
-                        <div className="mt-8 space-y-2">
-                            <Link href="#" className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400">
-                                <span className="text-lg">📝</span>
-                                <span className="font-medium">Naukri Blog</span>
+                        <div className="mt-8 space-y-3 pb-8">
+                            <Link 
+                                href="#" 
+                                className="group flex items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-slate-200 hover:bg-slate-50 hover:shadow-sm dark:hover:border-slate-800 dark:hover:bg-slate-900/50"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-white dark:bg-slate-800 dark:group-hover:bg-slate-950/50 ${isRecruiter ? 'group-hover:text-purple-600 dark:group-hover:text-purple-400' : 'group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+                                        <FaNewspaper className="text-lg text-slate-500 group-hover:text-inherit dark:text-slate-400" />
+                                    </div>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">{isRecruiter ? "Employer Blog" : "HireX Blog"}</span>
+                                </div>
+                                <FaChevronRight className="text-sm text-slate-400 opacity-0 transition-all group-hover:opacity-100 group-hover:-translate-x-1" />
                             </Link>
-                            <Link href="#" className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400">
-                                <span className="text-lg">⚙️</span>
-                                <span className="font-medium">Settings</span>
+
+                            <Link 
+                                href={isRecruiter ? "/employer/settings" : "/mnjuser/settings"} 
+                                className="group flex items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-slate-200 hover:bg-slate-50 hover:shadow-sm dark:hover:border-slate-800 dark:hover:bg-slate-900/50"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-white dark:bg-slate-800 dark:group-hover:bg-slate-950/50 ${isRecruiter ? 'group-hover:text-purple-600 dark:group-hover:text-purple-400' : 'group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+                                        <FaCog className="text-lg text-slate-500 group-hover:text-inherit dark:text-slate-400 transition-transform group-hover:rotate-45" />
+                                    </div>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">Settings</span>
+                                </div>
+                                <FaChevronRight className="text-sm text-slate-400 opacity-0 transition-all group-hover:opacity-100 group-hover:-translate-x-1" />
                             </Link>
-                            <Link href="#" className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400">
-                                <span className="text-lg">❓</span>
-                                <span className="font-medium">FAQs</span>
+
+                            <Link 
+                                href="#" 
+                                className="group flex items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-slate-200 hover:bg-slate-50 hover:shadow-sm dark:hover:border-slate-800 dark:hover:bg-slate-900/50"
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-white dark:bg-slate-800 dark:group-hover:bg-slate-950/50 ${isRecruiter ? 'group-hover:text-purple-600 dark:group-hover:text-purple-400' : 'group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
+                                        <FaQuestionCircle className="text-lg text-slate-500 group-hover:text-inherit dark:text-slate-400" />
+                                    </div>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">FAQs & Help</span>
+                                </div>
+                                <FaChevronRight className="text-sm text-slate-400 opacity-0 transition-all group-hover:opacity-100 group-hover:-translate-x-1" />
                             </Link>
+
+                            <div className="my-2 border-t border-slate-100 dark:border-slate-800/60" />
+
                             <button 
                                 onClick={handleLogout}
-                                className="flex w-full items-center gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 text-left"
+                                className="group flex w-full items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-red-100 hover:bg-red-50 hover:shadow-sm dark:hover:border-red-900/30 dark:hover:bg-red-900/10"
                             >
-                                <span className="text-lg">↪️</span>
-                                <span className="font-medium">Logout</span>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 transition-colors group-hover:bg-white dark:bg-red-900/20 dark:group-hover:bg-slate-950/50 group-hover:text-red-600 dark:group-hover:text-red-400">
+                                        <FaSignOutAlt className="text-lg text-red-500 group-hover:text-inherit dark:text-red-400" />
+                                    </div>
+                                    <span className="font-semibold text-red-600 dark:text-red-400">Logout</span>
+                                </div>
                             </button>
                         </div>
 
@@ -523,7 +623,9 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
 
   return (
     <motion.header
-    // ... existing code ...
+      initial={{ y: -24, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="fixed inset-x-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md shadow-sm dark:border-slate-800 dark:bg-slate-950/80"
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         
@@ -578,7 +680,7 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute left-0 top-full z-50 mt-1 w-150 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-950 dark:shadow-slate-900/50"
+                          className="absolute left-0 top-full z-50 mt-1 w-150 overflow-hidden rounded-xl border border-slate-200 bg-white/95 backdrop-blur-xl shadow-2xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-950/95 dark:shadow-slate-900/50"
                         >
                           <div className="flex p-6">
                              {link.columns.map((col, idx) => (
@@ -613,28 +715,46 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                 suppressHydrationWarning
                 type="text"
                 placeholder="Search jobs, skills, companies..."
-                className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 group-hover:border-blue-300 group-hover:bg-white group-hover:shadow-lg group-hover:shadow-blue-500/5 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:bg-slate-950 dark:focus:ring-blue-400/10 dark:group-hover:border-slate-600 dark:group-hover:bg-slate-950"
+                className="w-full rounded-full border border-slate-200 bg-slate-50/80 backdrop-blur-sm py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 group-hover:border-blue-300 group-hover:bg-white group-hover:shadow-lg group-hover:shadow-blue-500/5 dark:border-slate-700 dark:bg-slate-900/80 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:bg-slate-950 dark:focus:ring-blue-400/10 dark:group-hover:border-slate-600 dark:group-hover:bg-slate-950"
               />
               <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-300 group-hover:text-blue-500 group-focus-within:text-blue-600 dark:text-slate-500 dark:group-hover:text-blue-400 dark:group-focus-within:text-blue-400" />
             </div>
           </div>
         )}
 
-        {/* Right Side: Auth Actions */}
+        {/* Right Side: Auth Actions or User Profile dropdown */}
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/auth/login"
-            className="rounded-full border border-blue-500 px-5 py-2 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
-          >
-            Login
-          </Link>
-          
-          <Link
-            href="/auth/register"
-            className="rounded-full bg-orange-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/20 transition-all hover:bg-orange-500 hover:shadow-orange-500/40"
-          >
-            Register
-          </Link>
+          {isMounted && user ? (
+            <button 
+              onClick={toggleProfileDrawer}
+              className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm hover:shadow-md transition-all dark:border-slate-700 dark:bg-slate-900"
+            >
+              <div className="h-8 w-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-700">
+                  <img 
+                     src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                     alt={displayUser?.fullName || "Guest"}
+                     className="h-full w-full object-cover" 
+                  />
+              </div>
+              <FaBars className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
+            </button>
+          ) : (
+            <>
+              <Link
+                href="/auth/login"
+                className="rounded-full border border-blue-500 px-5 py-2 text-xs font-bold text-blue-600 transition-all duration-300 hover:bg-blue-50 hover:shadow-md hover:shadow-blue-500/10 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30"
+              >
+                Login
+              </Link>
+              
+              <Link
+                href="/auth/register"
+                className="rounded-full bg-linear-to-r from-orange-500 to-orange-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-orange-500/40"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile menu toggle */}
@@ -676,20 +796,43 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
               <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
               
               <div className="mt-2 flex gap-3 px-1">
-                 <Link
-                    href="/auth/login"
-                    onClick={close}
-                    className="flex-1 rounded-full border border-blue-500 py-2 text-center text-sm font-bold text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                 >
-                    Login
-                 </Link>
-                 <Link
-                    href="/auth/register"
-                    onClick={close}
-                    className="flex-1 rounded-full bg-orange-600 py-2 text-center text-sm font-bold text-white shadow-md shadow-orange-500/20"
-                 >
-                    Register
-                 </Link>
+                 {isMounted && user ? (
+                   <div className="flex w-full items-center justify-between">
+                     <div className="flex items-center gap-3">
+                       <div className="h-8 w-8 rounded-full overflow-hidden">
+                          <img 
+                             src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                             alt={displayUser?.fullName || "Guest"}
+                             className="h-full w-full object-cover" 
+                          />
+                       </div>
+                       <span className="text-sm font-bold text-slate-900 dark:text-white">{displayUser?.fullName || "Guest"}</span>
+                     </div>
+                     <button
+                       onClick={handleLogout}
+                       className="text-xs font-bold text-red-500 hover:underline"
+                     >
+                       Logout
+                     </button>
+                   </div>
+                 ) : (
+                   <>
+                     <Link
+                        href="/auth/login"
+                        onClick={close}
+                        className="flex-1 rounded-full border border-blue-500 py-2 text-center text-sm font-bold text-blue-600 transition-all duration-300 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30"
+                     >
+                        Login
+                     </Link>
+                     <Link
+                        href="/auth/register"
+                        onClick={close}
+                        className="flex-1 rounded-full bg-linear-to-r from-orange-500 to-orange-600 py-2 text-center text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-all duration-300 hover:scale-105"
+                     >
+                        Register
+                     </Link>
+                   </>
+                 )}
               </div>
             </div>
           </motion.div>

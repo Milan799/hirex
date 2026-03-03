@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { useAppSelector } from "@/lib/store/hooks";
+import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
+import { fetchMyApplications } from "@/lib/store/slices/applicationSlice";
+import { fetchJobs } from "@/lib/store/slices/jobSlice";
 import { PublicNavbar } from "@/components/layout/Navbar";
 import { 
   Search, 
@@ -33,13 +35,19 @@ import {
 } from "lucide-react";
 
 export default function Homepage() {
-  const { data: user } = useAppSelector((state) => state.user);
+  const { data: userResponse } = useAppSelector((state) => state.user);
+  const user = userResponse?.user || userResponse; 
+  const { applications } = useAppSelector((state) => state.application);
+  const { jobs: recommendedJobs } = useAppSelector((state) => state.job);
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
   
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    dispatch(fetchMyApplications());
+    dispatch(fetchJobs({ limit: 5 })); // Fetch some recommendations
+  }, [dispatch]);
 
   const handleLogout = () => {
     // Clear any local storage if needed
@@ -51,8 +59,20 @@ export default function Homepage() {
   const userName = (isMounted && user?.fullName) || "Guest";
   const userRole = (isMounted && user?.role) || "Job Seeker";
   
-  // Mock data
-  const completeness = 85; 
+  // Calculate profile completeness dynamically based on Naukri logic
+  const calculateCompleteness = () => {
+    if (!user) return 0;
+    let score = 0;
+    if (user.fullName) score += 20;
+    if (user.email) score += 20;
+    if (user.candidateProfile?.resumeUrl) score += 25;
+    if (user.candidateProfile?.skills?.length > 0) score += 15;
+    if (user.candidateProfile?.experience?.length > 0) score += 10;
+    if (user.candidateProfile?.education?.length > 0) score += 10;
+    return score || 20; // Base score for just signing up
+  };
+  
+  const completeness = calculateCompleteness(); 
 
   // Animation variants
   const containerVariants = {
@@ -65,7 +85,7 @@ export default function Homepage() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
@@ -129,10 +149,10 @@ export default function Homepage() {
                             <img 
                                 src={`https://ui-avatars.com/api/?name=${userName}&background=random`} 
                                 alt={userName}
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
                             />
                         </div>
-                        <span className="absolute bottom-0 right-0 flex h-7 w-9 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white dark:ring-slate-900">
+                        <span className="absolute bottom-0 right-0 flex h-7 w-9 items-center justify-center rounded-full bg-linear-to-r from-blue-600 to-indigo-600 text-[10px] font-bold text-white shadow-lg ring-2 ring-white dark:ring-slate-900">
                             {completeness}%
                         </span>
                     </div>
@@ -162,11 +182,11 @@ export default function Homepage() {
                   <div className="grid grid-cols-2 divide-x divide-slate-200 dark:divide-slate-700">
                       <div className="pr-4">
                           <p className="text-[10px] font-medium text-slate-500 mb-0.5">Search appearances</p>
-                          <p className="text-lg font-bold text-slate-900 dark:text-white">12</p>
+                          <p className="text-lg font-bold text-slate-900 dark:text-white">{applications.length * 3 + 5}</p>
                       </div>
                       <div className="pl-4">
                           <p className="text-[10px] font-medium text-slate-500 mb-0.5">Recruiter actions</p>
-                          <p className="text-lg font-bold text-slate-900 dark:text-white">4</p>
+                          <p className="text-lg font-bold text-slate-900 dark:text-white">{applications.length + (applications.length > 0 ? 1 : 0)}</p>
                       </div>
                   </div>
               </div>
@@ -220,49 +240,86 @@ export default function Homepage() {
           {/* CENTER: Feed */}
           <div className="lg:col-span-6 space-y-6">
              {/* Pro Banner - IMPROVED DESIGN */}
-             <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-amber-50 via-orange-50 to-yellow-50 p-6 shadow-sm border border-orange-100 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-yellow-950/20 dark:border-orange-900/50">
-                 <div className="absolute -right-6 -top-6 text-orange-100 dark:text-orange-900/20 opacity-50 rotate-12">
+             <div className="group relative overflow-hidden rounded-3xl bg-linear-to-br from-amber-50 via-orange-50 to-yellow-50 p-6 shadow-md border border-orange-200/50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-yellow-950/20 dark:border-orange-900/50 transition-all hover:shadow-orange-500/10">
+                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                 <div className="absolute -right-6 -top-6 text-orange-200 dark:text-orange-900/20 opacity-60 rotate-12 transition-transform duration-700 group-hover:rotate-45 group-hover:scale-110">
                      <Crown size={120} strokeWidth={1.5} />
                  </div>
                  
                  <div className="relative flex justify-between items-start z-10">
                      <div className="flex-1">
                          <div className="flex items-center gap-2 mb-2">
-                            <span className="inline-flex items-center rounded-md bg-orange-100 px-2 py-1 text-xs font-bold text-orange-700 ring-1 ring-inset ring-orange-600/20 dark:bg-orange-900/40 dark:text-orange-300">
+                            <span className="inline-flex items-center rounded-md bg-linear-to-r from-orange-400 to-amber-500 px-2 py-1 text-[10px] font-extrabold text-white shadow-sm ring-1 ring-inset ring-orange-600/20">
                                 PRO
                             </span>
-                            <span className="text-xs font-semibold text-orange-600/80 dark:text-orange-400">
-                                Premium Access
+                            <span className="text-xs font-bold tracking-wide text-orange-700/80 dark:text-orange-400">
+                                PREMIUM ACCESS
                             </span>
                          </div>
-                         <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                         <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white mt-3">
                              {userName}, unlock your potential
                          </h3>
-                         <p className="text-sm text-slate-600 mt-1 mb-5 max-w-xs dark:text-slate-400">
-                            Get 3x more visibility and exclusive job access.
+                         <p className="text-sm font-medium text-slate-700 mt-2 mb-6 max-w-sm dark:text-slate-300">
+                            Get 3x more visibility and exclusive job access with HireX Pro.
                          </p>
                          <Link 
                            href="/pro_profile"
-                           className="group relative block overflow-hidden rounded-full bg-linear-to-r from-orange-500 to-amber-500 px-6 py-2.5 text-center text-xs font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition-all"
+                           className="group/btn relative inline-flex overflow-hidden rounded-full bg-linear-to-r from-orange-500 to-amber-500 px-7 py-3 text-center text-sm font-bold text-white shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 transition-all"
                          >
-                             <span className="relative z-10 flex items-center justify-center gap-1">
-                                Become a Pro Member <ChevronRight size={14} />
+                             <span className="relative z-10 flex items-center justify-center gap-2">
+                                Become a Pro Member <ChevronRight size={16} className="transition-transform group-hover/btn:translate-x-1" />
                              </span>
-                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
                          </Link>
                      </div>
-                     <div className="hidden sm:block pl-6 border-l border-orange-200/50 dark:border-orange-800/30">
-                         <div className="space-y-3 text-xs font-medium text-slate-700 dark:text-slate-300">
-                             <p className="flex items-center gap-2"><CheckCircle2 className="text-orange-500 h-4 w-4" /> Priority Application</p>
-                             <p className="flex items-center gap-2"><CheckCircle2 className="text-orange-500 h-4 w-4" /> AI Resume Review</p>
-                             <p className="flex items-center gap-2"><CheckCircle2 className="text-orange-500 h-4 w-4" /> Hidden Job Access</p>
+                     <div className="hidden md:block pl-8 border-l border-orange-200 dark:border-orange-800/30">
+                         <div className="space-y-4 text-xs font-bold text-slate-700 dark:text-slate-300">
+                             <p className="flex items-center gap-3"><CheckCircle2 className="text-orange-500 h-5 w-5 drop-shadow-sm" /> Priority Application</p>
+                             <p className="flex items-center gap-3"><CheckCircle2 className="text-orange-500 h-5 w-5 drop-shadow-sm" /> AI Resume Review</p>
+                             <p className="flex items-center gap-3"><CheckCircle2 className="text-orange-500 h-5 w-5 drop-shadow-sm" /> Hidden Job Access</p>
                          </div>
                      </div>
                  </div>
              </div>
 
-             {/* Recommended Jobs */}
+             {/* Recommended Jobs / Recent Applications */}
              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 dark:bg-slate-900 dark:border-slate-800">
+                 <div className="flex items-center justify-between mb-5">
+                     <div>
+                        <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                            Recent Applications <Activity className="h-4 w-4 text-blue-500" />
+                        </h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Track your application progress</p>
+                     </div>
+                 </div>
+                 
+                 <div className="flex flex-col gap-3 mb-6">
+                    {applications.length === 0 ? (
+                      <p className="text-sm font-medium text-slate-500 py-4 text-center">No applications yet. Head to the Jobs page to start applying!</p>
+                    ) : (
+                      applications.slice(0, 3).map((app: any) => (
+                        <div key={app._id} className="group relative flex items-center justify-between p-4 rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:shadow-md hover:border-blue-200 transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-800/50">
+                          <div>
+                            <h4 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">{app.jobId?.title || "Unknown Job"}</h4>
+                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">{app.jobId?.company || "Unknown Company"} • {new Date(app.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div>
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wide backdrop-blur-md ${
+                              app.status === 'Pending' ? 'bg-amber-100/80 text-amber-700 border border-amber-200/50 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/50' :
+                              app.status === 'Shortlisted' ? 'bg-blue-100/80 text-blue-700 border border-blue-200/50 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/50' :
+                              app.status === 'Interview' ? 'bg-purple-100/80 text-purple-700 border border-purple-200/50 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800/50' :
+                              app.status === 'Rejected' ? 'bg-red-100/80 text-red-700 border border-red-200/50 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800/50' :
+                              'bg-green-100/80 text-green-700 border border-green-200/50 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/50'
+                            }`}>
+                              {app.status === 'Pending' && <Clock className="mr-1 h-3 w-3" />}
+                              {app.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                 </div>
+
                  <div className="flex items-center justify-between mb-5">
                      <div>
                         <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
@@ -270,40 +327,28 @@ export default function Homepage() {
                         </h2>
                         <p className="text-xs text-slate-500 dark:text-slate-400">Based on your profile and search history</p>
                      </div>
-                     <button 
-                       className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400"
-                       suppressHydrationWarning
-                     >
+                     <Link href="/jobs" className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400">
                        View all
-                     </button>
+                     </Link>
                  </div>
                  
                  {/* Horizontal Scroll Container */}
                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
-                    <JobCard 
-                        role="Senior React Dev" 
-                        company="Microsoft" 
-                        exp="3-5 Yrs" 
-                        loc="Bangalore" 
-                        logo="https://www.google.com/s2/favicons?domain=microsoft.com&sz=128" 
-                        posted="1d ago" 
-                    />
-                    <JobCard 
-                        role="Frontend Engineer" 
-                        company="Airbnb" 
-                        exp="1-3 Yrs" 
-                        loc="Remote" 
-                        logo="https://www.google.com/s2/favicons?domain=airbnb.com&sz=128" 
-                        posted="Just now" 
-                    />
-                    <JobCard 
-                        role="Full Stack Lead" 
-                        company="Uber" 
-                        exp="5-8 Yrs" 
-                        loc="Hyderabad" 
-                        logo="https://www.google.com/s2/favicons?domain=uber.com&sz=128" 
-                        posted="3d ago" 
-                    />
+                    {recommendedJobs.length === 0 ? (
+                      <p className="text-sm font-medium text-slate-500 px-2">No recommendations available right now.</p>
+                    ) : (
+                      recommendedJobs.map((job: any) => (
+                        <JobCard 
+                            key={job._id}
+                            role={job.title} 
+                            company={typeof job.employerId === 'object' && job.employerId?.companyName ? job.employerId.companyName : (job.company || "Company")} 
+                            exp={job.experienceLevel} 
+                            loc={job.location} 
+                            logo="https://www.google.com/s2/favicons?domain=google.com&sz=128" 
+                            posted={new Date(job.createdAt).toLocaleDateString()} 
+                        />
+                      ))
+                    )}
                  </div>
              </div>
 
@@ -332,8 +377,21 @@ export default function Homepage() {
                  </div>
                  
                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                     <CompactJobCard role="Java Developer" company="Leading Firm" loc="Vadodara" />
-                     <CompactJobCard role="Product Manager" company="Top MNC" loc="Mumbai" />
+                     {recommendedJobs.length > 0 ? (
+                        recommendedJobs.slice(0, 2).map((job: any) => (
+                          <CompactJobCard 
+                            key={job._id}
+                            role={job.title} 
+                            company={typeof job.employerId === 'object' && job.employerId?.companyName ? job.employerId.companyName : (job.company || "Company")} 
+                            loc={job.location} 
+                          />
+                        ))
+                     ) : (
+                         <>
+                             <CompactJobCard role="Java Developer" company="Leading Firm" loc="Vadodara" />
+                             <CompactJobCard role="Product Manager" company="Top MNC" loc="Mumbai" />
+                         </>
+                     )}
                  </div>
              </div>
 
@@ -357,13 +415,38 @@ export default function Homepage() {
              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 dark:bg-slate-900 dark:border-slate-800">
                  <div className="flex items-center justify-between mb-5">
                      <h2 className="font-bold text-lg text-slate-900 dark:text-white">Top Hiring Companies</h2>
-                     <button className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400">View all</button>
+                     <Link href="/companies" className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400">View all</Link>
                  </div>
                  <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                     <CompanyCard name="Amazon" logo="https://www.google.com/s2/favicons?domain=amazon.com&sz=128" rating="4.2" reviews="12K" />
-                     <CompanyCard name="Google" logo="https://www.google.com/s2/favicons?domain=google.com&sz=128" rating="4.5" reviews="8K" />
-                     <CompanyCard name="Microsoft" logo="https://www.google.com/s2/favicons?domain=microsoft.com&sz=128" rating="4.4" reviews="10K" />
-                     <CompanyCard name="Flipkart" logo="https://www.google.com/s2/favicons?domain=flipkart.com&sz=128" rating="4.1" reviews="5K" />
+                     {(() => {
+                        if (recommendedJobs.length === 0) {
+                          return (
+                            <>
+                               <CompanyCard name="Amazon" logo="https://ui-avatars.com/api/?name=Amazon&background=random" rating="4.2" reviews="12K" />
+                               <CompanyCard name="Google" logo="https://ui-avatars.com/api/?name=Google&background=random" rating="4.5" reviews="8K" />
+                            </>
+                          );
+                        }
+                        
+                        // Extract unique companies from Recommended Jobs
+                        const comps = new Map();
+                        recommendedJobs.forEach((job: any) => {
+                          const employer = typeof job.employerId === 'object' ? job.employerId : null;
+                          const companyName = employer?.companyName || job.company || "Company";
+                          if (!comps.has(companyName)) {
+                            comps.set(companyName, {
+                                name: companyName,
+                                logo: `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&background=random`,
+                                rating: (Math.random() * (5.0 - 3.8) + 3.8).toFixed(1),
+                                reviews: Math.floor(Math.random() * 500) + 50 + "K" // Mock format
+                            });
+                          }
+                        });
+                        
+                        return Array.from(comps.values()).slice(0, 4).map((c, i) => (
+                            <CompanyCard key={i} name={c.name} logo={c.logo} rating={c.rating} reviews={c.reviews} />
+                        ));
+                     })()}
                  </div>
              </div>
           </div>

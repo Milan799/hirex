@@ -38,3 +38,52 @@ body {
 .dark ::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-slate-600);
 }
+
+/* Base Global Styles for Interactive Elements & Typography */
+@layer base {
+  button, 
+  [role="button"],
+  a.btn-like {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+  
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled),
+  a.btn-like:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Safe defaults for semantic lists that haven't been customized by utility classes */
+  ul:not([class]), ol:not([class]) {
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    padding-inline-start: 40px;
+    line-height: 1.6;
+    color: var(--color-slate-700);
+  }
+  .dark ul:not([class]), .dark ol:not([class]) {
+    color: var(--color-slate-300);
+  }
+  ul:not([class]) {
+    list-style-type: disc;
+  }
+  ol:not([class]) {
+    list-style-type: decimal;
+  }
+  li:not([class]) {
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Additional sleek utility classes */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .dark .glass-panel {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
