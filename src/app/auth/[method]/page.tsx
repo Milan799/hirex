@@ -68,7 +68,15 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const savedRole = sessionStorage.getItem("authRole");
+    const savedEmail = sessionStorage.getItem("authEmail");
+    if (savedRole === "candidate" || savedRole === "recruiter") {
+      setValue("role", savedRole);
+    }
+    if (savedEmail) {
+      setValue("email", savedEmail);
+    }
+  }, [setValue]);
 
   // Keep email in sync so verify and reset-password always have the right email
   useEffect(() => {
@@ -78,14 +86,34 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
   }, [mode, otpStep, forgotEmail, setValue]);
 
   const switchMode = (newMode: AuthMode) => {
+    // Preserve current role and email values when switching modes
+    const currentRole = watch("role") || "candidate";
+    const currentEmail = watch("email") || "";
+
+    sessionStorage.setItem("authRole", currentRole);
+    sessionStorage.setItem("authEmail", currentEmail);
+
     setMode(newMode);
     if (newMode !== "forgot") {
       setOtpStep("request");
       setForgotEmail("");
       setResetToken("");
     }
+    
+    // Push route but preserve the form state so the toggle UI and email don't reset
     router.replace(`/auth/${newMode}`);
-    reset();
+    
+    // Instead of completely resetting, we hard-set the form values we want to keep
+    setValue("role", currentRole as "candidate" | "recruiter");
+    if (currentEmail) {
+       setValue("email", currentEmail);
+    }
+    setValue("password", "");
+    if (newMode === "register" || newMode === "forgot") {
+       setValue("fullName", "");
+       setValue("confirmPassword", "");
+       setValue("otp", "");
+    }
   };
 
   const getErrorMessage = (err: unknown): string => {
@@ -96,25 +124,31 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
       const data = (err as Record<string, unknown>) ?? {};
       msgStr = (data.message ?? data.msg ?? data.error) as string;
     }
-    
-    if (typeof msgStr !== "string") return "Something went wrong. Please try again.";
+    if (typeof msgStr !== "string") return "Oops! Something went wrong on our end. Please try again in a moment.";
 
     // Map technical / generic NextAuth errors to user-friendly messages
     const errorMap: Record<string, string> = {
-      "Configuration": "We're experiencing a server configuration issue. Please use an alternative login method or try again later.",
-      "AccessDenied": "Access denied. You do not have permission to access this account.",
-      "Verification": "The verification token has expired or is invalid.",
-      "OAuthSignin": "Unable to connect to the social provider. Please try again.",
-      "OAuthCallback": "Unable to complete authentication with the social provider. Please try again.",
-      "OAuthAccountNotLinked": "This email is already associated with another login method. Please sign in using your original account.",
-      "CredentialsSignin": "Incorrect email or password. Please verify your details and try again.",
-      "fetch failed": "Unable to reach the server. Please check your internet connection.",
-      "Network Error": "Network issue detected. Please check your connection and try again."
+      "Configuration": "System maintenance. Try again later.",
+      "AccessDenied": "Access denied.",
+      "Verification": "Link expired. Request anew.",
+      "OAuthSignin": "Social login failed.",
+      "OAuthCallback": "Social auth error.",
+      "OAuthAccountNotLinked": "Email already in use.",
+      "CredentialsSignin": "Incorrect email or password.",
+      "fetch failed": "Server unreachable. Check connection.",
+      "Network Error": "Network error.",
+      "User not found": "Account not found. Pls register.",
+      "User already exists": "Account exists. Log in instead.",
+      "Invalid credentials": "Incorrect email or password.",
+      "Invalid or expired OTP": "Code invalid or expired."
     };
 
-    // If a direct map exists, return it. Otherwise if it includes technical jargon, soften it.
+    // If a direct map exists, return it.
     if (errorMap[msgStr]) return errorMap[msgStr];
+    // Catch-all mapping for specific technical strings if they weren't explicitly matched
     if (msgStr.includes("Network") || msgStr.includes("fetch")) return errorMap["fetch failed"];
+    if (msgStr.includes("E11000 duplicate key")) return errorMap["User already exists"];
+    if (msgStr.includes("Cast to ObjectId failed")) return "Data error. Refresh and retry.";
     
     return msgStr;
   };
@@ -128,20 +162,21 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
           const result = await signIn("credentials", {
             email: data.email,
             password: data.password,
+            role: data.role, // Pass the selected role explicitly for strict backend validation
             redirect: false
         });
-        if (result?.error) {
+          if (result?.error) {
             const friendlyError = getErrorMessage(result.error);
             setError("root", { message: friendlyError });
             notify(friendlyError, "error");
         } else if (result?.ok) {
             notify("Login successful!", "success");
+            // Determine redirect dynamically based on the verified role
             if (data.role === 'recruiter') {
                router.push("/employer/dashboard");
             } else {
                router.push("/mnjuser/homepage");
             }
-            router.refresh();
         }
       } else if (mode === "register") {
         const result = await dispatch(
@@ -158,6 +193,8 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
         ).unwrap();
         if (result) {
           notify("Registration successful! Please log in.", "success");
+          sessionStorage.setItem("authRole", data.role || "candidate");
+          sessionStorage.setItem("authEmail", data.email || "");
           switchMode("login");
         }
       } else if (mode === "forgot") {
@@ -363,25 +400,32 @@ export default function AuthPage({ params }: { params: Promise<{ method: string 
             >
               {/* Role Selection Slider */}
               {(mode === "register" || mode === "login") && (
-                <div className="relative flex w-full rounded-2xl bg-slate-100 p-1 dark:bg-slate-800 shadow-inner">
+                <div className="relative flex w-full rounded-2xl bg-white/40 p-1.5 dark:bg-slate-800/40 shadow-inner backdrop-blur-xl border border-white/60 dark:border-slate-700/50">
+                  {/* The sliding active background */}
                   <div
-                    className="absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-white shadow-sm transition-transform duration-300 ease-in-out dark:bg-slate-700"
+                    className="absolute inset-y-1.5 w-[calc(50%-6px)] rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md shadow-blue-500/30 transition-transform duration-300 ease-in-out"
                     style={{ transform: watch("role") === "recruiter" ? "translateX(100%)" : "translateX(0)" }}
                   />
                   <button
                     type="button"
-                    onClick={() => setValue("role", "candidate")}
-                    className={`relative flex-1 py-3 text-sm font-bold transition-colors z-10 ${
-                      watch("role") === "candidate" ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400"
+                    onClick={() => {
+                        setValue("role", "candidate");
+                        sessionStorage.setItem("authRole", "candidate");
+                    }}
+                    className={`relative flex-1 py-3 text-sm font-bold transition-all z-10 ${
+                      watch("role") === "candidate" ? "text-white drop-shadow-md" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
                     }`}
                   >
                     Job Seeker
                   </button>
                   <button
                     type="button"
-                    onClick={() => setValue("role", "recruiter")}
-                    className={`relative flex-1 py-3 text-sm font-bold transition-colors z-10 ${
-                      watch("role") === "recruiter" ? "text-blue-600 dark:text-blue-400" : "text-slate-500 dark:text-slate-400"
+                    onClick={() => {
+                        setValue("role", "recruiter");
+                        sessionStorage.setItem("authRole", "recruiter");
+                    }}
+                    className={`relative flex-1 py-3 text-sm font-bold transition-all z-10 ${
+                      watch("role") === "recruiter" ? "text-white drop-shadow-md" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
                     }`}
                   >
                     Recruiter

@@ -15,15 +15,35 @@ const navItems = [
     columns: [
        {
          title: "Popular Categories",
-         items: ["IT Jobs", "Sales Jobs", "Marketing Jobs", "Data Science Jobs", "HR Jobs", "Engineering Jobs"]
+         items: [
+           { label: "IT Jobs", href: "/jobs?category=it" },
+           { label: "Sales Jobs", href: "/jobs?category=sales" },
+           { label: "Marketing Jobs", href: "/jobs?category=marketing" },
+           { label: "Data Science Jobs", href: "/jobs?category=data-science" },
+           { label: "HR Jobs", href: "/jobs?category=hr" },
+           { label: "Engineering Jobs", href: "/jobs?category=engineering" },
+         ]
        },
        {
          title: "Jobs by Location",
-         items: ["Jobs in Delhi", "Jobs in Mumbai", "Jobs in Bengaluru", "Jobs in Hyderabad", "Jobs in Pune", "Remote Jobs"]
+         items: [
+           { label: "Jobs in Delhi", href: "/jobs?location=Delhi" },
+           { label: "Jobs in Mumbai", href: "/jobs?location=Mumbai" },
+           { label: "Jobs in Bengaluru", href: "/jobs?location=Bengaluru" },
+           { label: "Jobs in Hyderabad", href: "/jobs?location=Hyderabad" },
+           { label: "Jobs in Pune", href: "/jobs?location=Pune" },
+           { label: "Remote Jobs", href: "/jobs?type=remote" },
+         ]
        },
        {
          title: "Explore More",
-         items: ["Jobs by Company", "Jobs by Category", "Jobs by Designation", "Jobs by Skill", "Featured Jobs"]
+         items: [
+           { label: "Jobs by Company", href: "/jobs?filter=company" },
+           { label: "Jobs by Category", href: "/jobs?filter=category" },
+           { label: "Jobs by Designation", href: "/jobs?filter=designation" },
+           { label: "Jobs by Skill", href: "/jobs?filter=skill" },
+           { label: "Featured Jobs", href: "/jobs?featured=true" },
+         ]
        }
     ]
   },
@@ -32,12 +52,24 @@ const navItems = [
     label: "Companies",
     columns: [
       {
-        title: "Explore Categories",
-        items: ["Unicorn", "MNC", "Startup", "Product based", "Internet"]
+        title: "Explore by Type",
+        items: [
+          { label: "Unicorns", href: "/companies?type=unicorn" },
+          { label: "MNC", href: "/companies?type=mnc" },
+          { label: "Startups", href: "/companies?type=startup" },
+          { label: "Product Based", href: "/companies?type=product" },
+          { label: "Internet Companies", href: "/companies?type=internet" },
+        ]
       },
       {
         title: "Top Collections",
-        items: ["Top Companies", "IT Companies", "Fintech Companies", "Sponsored Companies", "Featured Companies"]
+        items: [
+          { label: "Top Companies", href: "/companies?sort=top" },
+          { label: "IT Companies", href: "/companies?category=it" },
+          { label: "Fintech Companies", href: "/companies?category=fintech" },
+          { label: "Sponsored Companies", href: "/companies?sponsored=true" },
+          { label: "Featured Companies", href: "/companies?featured=true" },
+        ]
       }
     ] 
   },
@@ -47,11 +79,22 @@ const navItems = [
     columns: [
       {
         title: "Resume Services",
-        items: ["Resume Writing", "Text Resume", "Visual Resume", "Resume Critique", "Cover Letter"]
+        items: [
+          { label: "Resume Writing", href: "/services/resume-writing" },
+          { label: "Text Resume", href: "/services/text-resume" },
+          { label: "Visual Resume", href: "/services/visual-resume" },
+          { label: "Resume Critique", href: "/services/resume-critique" },
+          { label: "Cover Letter", href: "/services/cover-letter" },
+        ]
       },
       {
         title: "Recruiter Reach",
-        items: ["Resume Display", "Recruiter Connection", "Priority Applicant", "Job Search Manager"]
+        items: [
+          { label: "Resume Display", href: "/services/resume-display" },
+          { label: "Recruiter Connection", href: "/services/recruiter-connection" },
+          { label: "Priority Applicant", href: "/services/priority-applicant" },
+          { label: "Job Search Manager", href: "/services/job-search-manager" },
+        ]
       }
     ]
   },
@@ -64,7 +107,12 @@ const recruiterNavItems = [
     columns: [
       {
         title: "Overview",
-        items: ["Analytics", "Active Jobs", "Recent Applications", "Account Billing"]
+        items: [
+          { label: "Analytics", href: "/employer/dashboard?tab=analytics" },
+          { label: "Active Jobs", href: "/employer/jobs?status=active" },
+          { label: "Recent Applications", href: "/employer/applications" },
+          { label: "Account Billing", href: "/employer/settings?tab=billing" },
+        ]
       }
     ]
   },
@@ -74,7 +122,12 @@ const recruiterNavItems = [
     columns: [
       {
         title: "Hiring Solutions",
-        items: ["Standard Posting", "Premium Posting", "Bulk Hiring", "Internships"]
+        items: [
+          { label: "Standard Posting", href: "/employer/jobs/new?type=standard" },
+          { label: "Premium Posting", href: "/employer/jobs/new?type=premium" },
+          { label: "Bulk Hiring", href: "/employer/jobs/new?type=bulk" },
+          { label: "Internships", href: "/employer/jobs/new?type=internship" },
+        ]
       }
     ]
   },
@@ -84,7 +137,12 @@ const recruiterNavItems = [
     columns: [
       {
         title: "Sourcing",
-        items: ["Search Resumes", "Saved Candidates", "AI Matching", "Campus Hiring"]
+        items: [
+          { label: "Search Resumes", href: "/employer/candidates?tab=search" },
+          { label: "Saved Candidates", href: "/employer/candidates?tab=saved" },
+          { label: "AI Matching", href: "/employer/candidates?tab=ai" },
+          { label: "Campus Hiring", href: "/employer/candidates?tab=campus" },
+        ]
       }
     ]
   }
@@ -100,7 +158,7 @@ import { signOut, useSession } from "next-auth/react";
 export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const { data: session } = useSession();
   const { data: userResponse } = useAppSelector((state) => state.user);
@@ -125,7 +183,40 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
 
   const toggle = () => setOpen((v) => !v);
   const close = () => setOpen(false);
-  const toggleProfileDrawer = () => setProfileDrawerOpen((v) => !v);
+
+  const ProfileMenuPopUp = () => (
+    <AnimatePresence>
+      {profileDropdownOpen && (
+        <motion.div
+           initial={{ opacity: 0, y: 10 }}
+           animate={{ opacity: 1, y: 0 }}
+           exit={{ opacity: 0, y: 10 }}
+           transition={{ duration: 0.15 }}
+           className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-xl shadow-2xl dark:border-slate-800 dark:bg-slate-950/95"
+        >
+           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-slate-100 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
+                 <img src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} alt={displayUser?.fullName || "Guest"} className="h-full w-full object-cover" />
+              </div>
+              <div className="truncate">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{displayUser?.fullName || "Guest"}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user?.role || "Job Seeker"}</p>
+              </div>
+           </div>
+           <div className="p-2 space-y-1">
+              <Link onClick={() => setProfileDropdownOpen(false)} href={user?.role === "recruiter" ? "/employer/profile" : "/mnjuser/profile"} className="flex flex-col px-3 py-2 hover:bg-slate-50 text-left rounded-lg dark:hover:bg-slate-900/50 transition-colors">
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">View Profile</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">Update your information</span>
+              </Link>
+              <Link onClick={() => setProfileDropdownOpen(false)} href={user?.role === "recruiter" ? "/employer/settings" : "/mnjuser/settings"} className="flex items-center px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg dark:text-slate-300 dark:hover:bg-slate-900/50 transition-colors">Settings</Link>
+           </div>
+           <div className="p-2 border-t border-slate-100 dark:border-slate-800">
+              <button onClick={handleLogout} className="flex w-full items-center px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-lg dark:text-red-400 dark:hover:bg-red-900/20 transition-colors">Logout</button>
+           </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   const dispatch = useAppDispatch();
 
@@ -180,19 +271,21 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
           {/* Right Actions */}
           <div className="flex items-center gap-4">
              {isMounted && user ? (
-               <button 
-                 onClick={toggleProfileDrawer}
-                 className="group flex items-center gap-3 rounded-full border border-slate-800 bg-slate-900 py-1 pl-1 pr-4 shadow-sm hover:border-amber-500/50 transition-all"
-               >
-                    <div className="h-8 w-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
-                        <img 
-                           src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random&color=fff&background=d97706`} 
-                           alt={displayUser?.fullName || "Guest"}
-                           className="h-full w-full object-cover" 
-                        />
-                    </div>
-                    <FaBars className="text-slate-400 group-hover:text-amber-400 transition-colors" />
-               </button>
+               <div className="relative" onMouseEnter={() => setProfileDropdownOpen(true)} onMouseLeave={() => setProfileDropdownOpen(false)}>
+                 <button 
+                   className="group flex items-center gap-3 rounded-full border border-slate-800 bg-slate-900 py-1 pl-1 pr-4 shadow-sm hover:border-amber-500/50 transition-all"
+                 >
+                      <div className="h-8 w-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                          <img 
+                             src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random&color=fff&background=d97706`} 
+                             alt={displayUser?.fullName || "Guest"}
+                             className="h-full w-full object-cover" 
+                          />
+                      </div>
+                      <IoChevronDown className="text-slate-400 group-hover:text-amber-400 transition-colors" />
+                 </button>
+                 <ProfileMenuPopUp />
+               </div>
              ) : (
                <div className="flex items-center gap-3">
                  <Link href="/auth/login" className="text-sm font-bold text-slate-300 hover:text-white transition-colors">Login</Link>
@@ -338,9 +431,9 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                                               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">{col.title}</h4>
                                               <ul className="space-y-2">
                                                  {col.items.map(item => (
-                                                   <li key={item}>
-                                                      <Link href="#" className={`text-sm text-slate-600 hover:underline dark:text-slate-400 ${isRecruiter ? 'hover:text-purple-600 dark:hover:text-purple-400' : 'hover:text-blue-600 dark:hover:text-blue-400'}`}>
-                                                        {item}
+                                                   <li key={item.label}>
+                                                      <Link href={item.href} className={`text-sm text-slate-600 hover:underline dark:text-slate-400 ${isRecruiter ? 'hover:text-purple-600 dark:hover:text-purple-400' : 'hover:text-blue-600 dark:hover:text-blue-400'}`}>
+                                                        {item.label}
                                                       </Link>
                                                    </li>
                                                  ))}
@@ -382,19 +475,21 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                      <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 hidden md:block"></div>
                      
                      {/* Profile Button */}
-                     <button 
-                       onClick={toggleProfileDrawer}
-                       className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm hover:shadow-md transition-all dark:border-slate-700 dark:bg-slate-900"
-                     >
-                          <div className="h-8 w-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-700">
-                              <img 
-                                 src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
-                                 alt={displayUser?.fullName || "Guest"}
-                                 className="h-full w-full object-cover" 
-                              />
-                          </div>
-                          <FaBars className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
-                     </button>
+                     <div className="relative" onMouseEnter={() => setProfileDropdownOpen(true)} onMouseLeave={() => setProfileDropdownOpen(false)}>
+                       <button 
+                         className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm hover:shadow-md transition-all dark:border-slate-700 dark:bg-slate-900"
+                       >
+                            <div className="h-8 w-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-700">
+                                <img 
+                                   src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                                   alt={displayUser?.fullName || "Guest"}
+                                   className="h-full w-full object-cover" 
+                                />
+                            </div>
+                            <IoChevronDown className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
+                       </button>
+                       <ProfileMenuPopUp />
+                     </div>
                      
                     {/* Mobile menu toggle */}
                     <div className="flex items-center gap-2 md:hidden">
@@ -454,169 +549,7 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
               </AnimatePresence>
          </motion.header>
 
-         {/* Profile Side Drawer */}
-         <AnimatePresence>
-            {profileDrawerOpen && (
-                <>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setProfileDrawerOpen(false)}
-                        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm dark:bg-black/50"
-                    />
-                    <motion.div
-                        initial={{ x: "100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "100%" }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className="fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950 sm:w-100"
-                    >
-                        <button 
-                            onClick={() => setProfileDrawerOpen(false)}
-                            className="absolute right-4 top-4 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                        >
-                            <IoClose className="text-2xl" />
-                        </button>
-
-                        <div className="mt-6 flex flex-col items-center">
-                            {/* Circular Progress Avatar */}
-                            <div className="relative h-24 w-24 mb-4">
-                               <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
-                                    <path
-                                        className="text-slate-100 dark:text-slate-800"
-                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                    />
-                                    <path
-                                        className={`${isRecruiter ? 'text-purple-500' : 'text-orange-400'} drop-shadow-sm`}
-                                        strokeDasharray={isRecruiter ? "100, 100" : "53, 100"}
-                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
-                                <div className="absolute inset-2 overflow-hidden rounded-full border-2 border-white dark:border-slate-900">
-                                    <img 
-                                        src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
-                                        alt={displayUser?.fullName || "Guest"}
-                                        className="h-full w-full object-cover" 
-                                    />
-                                </div>
-                                {!isRecruiter && (
-                                  <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-white text-[10px] font-bold text-slate-700 shadow-md dark:bg-slate-800 dark:text-slate-200">
-                                      53%
-                                  </span>
-                                )}
-                            </div>
-
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{displayUser?.fullName || "Guest"}</h2>
-                            <p className="text-sm text-slate-500 mt-1 dark:text-slate-400 text-center">
-                              {isRecruiter ? "Employer Account" : "MCA Computers at Sarvajanik College of Engineering and Technology, Surat"}
-                            </p>
-                            
-                            <Link href={isRecruiter ? "/employer/profile" : "/mnjuser/profile"} className={`mt-3 text-sm font-bold hover:underline ${isRecruiter ? "text-purple-600 dark:text-purple-400" : "text-blue-600 dark:text-blue-400"}`}>
-                                View & Update Profile
-                            </Link>
-                        </div>
-
-                        {/* Pro Banner - Only for Candidates */}
-                        {!isRecruiter && (
-                          <div className="mt-8 rounded-xl bg-linear-to-r from-orange-50 to-amber-50 p-4 border border-orange-100 dark:from-orange-900/20 dark:to-amber-900/20 dark:border-orange-900/40 flex items-center justify-between cursor-pointer hover:shadow-sm transition-shadow">
-                              <div className="flex items-center gap-3">
-                                  <div className="h-8 w-8 rounded-full bg-[#dfae47] flex items-center justify-center text-white">
-                                      <span className="text-lg">👑</span>
-                                  </div>
-                                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">Upgrade to Naukri Pro</span>
-                              </div>
-                              <IoChevronDown className="text-slate-400 -rotate-90" />
-                          </div>
-                        )}
-
-                        {/* Profile/Company Performance */}
-                        <div className="mt-8">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-slate-900 dark:text-white">{isRecruiter ? "Hiring Overview" : "Your profile performance"}</h3>
-                                <span className="text-xs text-slate-400">Last 90 days</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                                <div className="text-center border-r border-slate-200 dark:border-slate-800">
-                                    <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
-                                    <p className="text-xs text-slate-500 mt-1">{isRecruiter ? "Active Postings" : "Search Appearances"}</p>
-                                    <button className={`mt-2 text-xs font-bold hover:underline ${isRecruiter ? "text-purple-600" : "text-blue-600"}`}>View all</button>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-2xl font-bold text-slate-900 dark:text-white">0</p>
-                                    <p className="text-xs text-slate-500 mt-1">{isRecruiter ? "New Applicants" : "Recruiter Actions"}</p>
-                                    <button className={`mt-2 text-xs font-bold hover:underline ${isRecruiter ? "text-purple-600" : "text-blue-600"}`}>View all</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Menu Links */}
-                        <div className="mt-8 space-y-3 pb-8">
-                            <Link 
-                                href="#" 
-                                className="group flex items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-slate-200 hover:bg-slate-50 hover:shadow-sm dark:hover:border-slate-800 dark:hover:bg-slate-900/50"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-white dark:bg-slate-800 dark:group-hover:bg-slate-950/50 ${isRecruiter ? 'group-hover:text-purple-600 dark:group-hover:text-purple-400' : 'group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
-                                        <FaNewspaper className="text-lg text-slate-500 group-hover:text-inherit dark:text-slate-400" />
-                                    </div>
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">{isRecruiter ? "Employer Blog" : "HireX Blog"}</span>
-                                </div>
-                                <FaChevronRight className="text-sm text-slate-400 opacity-0 transition-all group-hover:opacity-100 group-hover:-translate-x-1" />
-                            </Link>
-
-                            <Link 
-                                href={isRecruiter ? "/employer/settings" : "/mnjuser/settings"} 
-                                className="group flex items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-slate-200 hover:bg-slate-50 hover:shadow-sm dark:hover:border-slate-800 dark:hover:bg-slate-900/50"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-white dark:bg-slate-800 dark:group-hover:bg-slate-950/50 ${isRecruiter ? 'group-hover:text-purple-600 dark:group-hover:text-purple-400' : 'group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
-                                        <FaCog className="text-lg text-slate-500 group-hover:text-inherit dark:text-slate-400 transition-transform group-hover:rotate-45" />
-                                    </div>
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">Settings</span>
-                                </div>
-                                <FaChevronRight className="text-sm text-slate-400 opacity-0 transition-all group-hover:opacity-100 group-hover:-translate-x-1" />
-                            </Link>
-
-                            <Link 
-                                href="#" 
-                                className="group flex items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-slate-200 hover:bg-slate-50 hover:shadow-sm dark:hover:border-slate-800 dark:hover:bg-slate-900/50"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-white dark:bg-slate-800 dark:group-hover:bg-slate-950/50 ${isRecruiter ? 'group-hover:text-purple-600 dark:group-hover:text-purple-400' : 'group-hover:text-blue-600 dark:group-hover:text-blue-400'}`}>
-                                        <FaQuestionCircle className="text-lg text-slate-500 group-hover:text-inherit dark:text-slate-400" />
-                                    </div>
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">FAQs & Help</span>
-                                </div>
-                                <FaChevronRight className="text-sm text-slate-400 opacity-0 transition-all group-hover:opacity-100 group-hover:-translate-x-1" />
-                            </Link>
-
-                            <div className="my-2 border-t border-slate-100 dark:border-slate-800/60" />
-
-                            <button 
-                                onClick={handleLogout}
-                                className="group flex w-full items-center justify-between rounded-2xl border border-transparent p-4 transition-all hover:border-red-100 hover:bg-red-50 hover:shadow-sm dark:hover:border-red-900/30 dark:hover:bg-red-900/10"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 transition-colors group-hover:bg-white dark:bg-red-900/20 dark:group-hover:bg-slate-950/50 group-hover:text-red-600 dark:group-hover:text-red-400">
-                                        <FaSignOutAlt className="text-lg text-red-500 group-hover:text-inherit dark:text-red-400" />
-                                    </div>
-                                    <span className="font-semibold text-red-600 dark:text-red-400">Logout</span>
-                                </div>
-                            </button>
-                        </div>
-
-                    </motion.div>
-                </>
-            )}
-         </AnimatePresence>
+         {/* Profile Dropdown has replaced Profile Side Drawer */}
          </>
        );
    }
@@ -688,9 +621,9 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
                                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">{col.title}</h4>
                                   <ul className="space-y-2">
                                      {col.items.map(item => (
-                                       <li key={item}>
-                                          <Link href="#" className="text-sm text-slate-600 hover:text-blue-600 hover:underline dark:text-slate-400 dark:hover:text-blue-400">
-                                            {item}
+                                       <li key={item.label}>
+                                          <Link href={item.href} className="text-sm text-slate-600 hover:text-blue-600 hover:underline dark:text-slate-400 dark:hover:text-blue-400">
+                                            {item.label}
                                           </Link>
                                        </li>
                                      ))}
@@ -725,19 +658,21 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
         {/* Right Side: Auth Actions or User Profile dropdown */}
         <div className="hidden items-center gap-3 md:flex">
           {isMounted && user ? (
-            <button 
-              onClick={toggleProfileDrawer}
-              className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm hover:shadow-md transition-all dark:border-slate-700 dark:bg-slate-900"
-            >
-              <div className="h-8 w-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-700">
-                  <img 
-                     src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
-                     alt={displayUser?.fullName || "Guest"}
-                     className="h-full w-full object-cover" 
-                  />
-              </div>
-              <FaBars className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
-            </button>
+            <div className="relative" onMouseEnter={() => setProfileDropdownOpen(true)} onMouseLeave={() => setProfileDropdownOpen(false)}>
+               <button 
+                 className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm hover:shadow-md transition-all dark:border-slate-700 dark:bg-slate-900"
+               >
+                 <div className="h-8 w-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-700">
+                     <img 
+                        src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
+                        alt={displayUser?.fullName || "Guest"}
+                        className="h-full w-full object-cover" 
+                     />
+                 </div>
+                 <IoChevronDown className="text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300 transition-colors" />
+               </button>
+               <ProfileMenuPopUp />
+            </div>
           ) : (
             <>
               <Link

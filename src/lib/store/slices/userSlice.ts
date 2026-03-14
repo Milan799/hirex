@@ -80,10 +80,6 @@ export const registerUser = createAsyncThunk(
   ) => {
     try {
       const res = await axiosClient.post(AUTH_ENDPOINTS.register, payload);
-      const data = res.data as { token?: string; user?: unknown };
-      if (data.token && typeof window !== "undefined") {
-        window.localStorage.setItem("token", data.token);
-      }
       onSuccess?.(res.data);
       return res.data;
     } catch (err: unknown) {

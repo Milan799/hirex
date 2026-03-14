@@ -87,3 +87,42 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
 }
+
+/* Custom Glassmorphism Toasts */
+.Toastify__toast {
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  color: var(--color-slate-800) !important;
+}
+
+.dark .Toastify__toast {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: var(--color-slate-100) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.Toastify__toast-body {
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Infinitely Scrolling Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+  display: flex;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}

@@ -24,7 +24,8 @@ export const {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        role: { label: "Role", type: "text" }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -37,7 +38,8 @@ export const {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               email: credentials.email,
-              password: credentials.password
+              password: credentials.password,
+              role: credentials.role
             })
           });
 

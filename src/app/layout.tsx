@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
 import { ReduxProvider } from "@/lib/store/provider";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { AuthListener } from "@/components/auth/AuthListener";
 import FooterWrapper from "@/components/FooterWrapper";
 import { ClientLoader } from "@/components/layout/ClientLoader";
-  import { ToastContainer } from 'react-toastify';
-  import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import "./globals.css";
 import HydrationFix from "@/components/layout/HydrationFix";
-
 
 const inter = Inter({ subsets: ["latin"] });
 
