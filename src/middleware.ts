@@ -27,18 +27,37 @@ export async function middleware(request: any) {
     return NextResponse.redirect(url);
   }
 
-  // If user is already logged in and tries to visit login page → send to their exact dashboard
-  if (isAuthRoute && session) {
-    const userRole = session.user?.role;
-    const url = request.nextUrl.clone();
-    
-    if (userRole === "recruiter") {
-      url.pathname = "/employer/dashboard";
-    } else {
-      url.pathname = "/mnjuser/homepage";
+  // Handle role-based access for logged-in users
+  if (session) {
+    const userRole = (session?.user as any)?.role || "candidate"; // Default to candidate
+
+    // If user tries to visit login page → send to their exact dashboard
+    if (isAuthRoute) {
+      const url = request.nextUrl.clone();
+      if (userRole === "recruiter") {
+        url.pathname = "/employer/dashboard";
+      } else {
+        url.pathname = "/mnjuser/homepage";
+      }
+      return NextResponse.redirect(url);
     }
-    return NextResponse.redirect(url);
+
+    // Role-based route guards
+    // Prevent candidates from accessing employer pages
+    if (pathname.startsWith("/employer") && userRole !== "recruiter") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/mnjuser/homepage";
+      return NextResponse.redirect(url);
+    }
+
+    // Prevent recruiters from accessing candidate pages
+    if (pathname.startsWith("/mnjuser") && userRole === "recruiter") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/employer/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
+
   return NextResponse.next();
 }
 

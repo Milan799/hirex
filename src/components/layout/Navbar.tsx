@@ -204,6 +204,10 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
               </div>
            </div>
            <div className="p-2 space-y-1">
+              <Link onClick={() => setProfileDropdownOpen(false)} href={user?.role === "recruiter" ? "/employer/dashboard" : "/mnjuser/homepage"} className="flex flex-col px-3 py-2 hover:bg-slate-50 text-left rounded-lg dark:hover:bg-slate-900/50 transition-colors">
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Dashboard</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">Go to your dashboard</span>
+              </Link>
               <Link onClick={() => setProfileDropdownOpen(false)} href={user?.role === "recruiter" ? "/employer/profile" : "/mnjuser/profile"} className="flex flex-col px-3 py-2 hover:bg-slate-50 text-left rounded-lg dark:hover:bg-slate-900/50 transition-colors">
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">View Profile</span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400">Update your information</span>
@@ -297,63 +301,6 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
           </div>
         </nav>
         
-        {/* Profile Drawer Integration */}
-        <AnimatePresence>
-          {profileDrawerOpen && (
-              <>
-                  <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setProfileDrawerOpen(false)}
-                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-                  />
-                  <motion.div
-                      initial={{ x: "100%" }}
-                      animate={{ x: 0 }}
-                      exit={{ x: "100%" }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      className="fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-slate-800 bg-slate-950 p-6 shadow-2xl sm:w-100"
-                  >
-                      <button 
-                          onClick={() => setProfileDrawerOpen(false)}
-                          className="absolute right-4 top-4 rounded-full p-2 text-slate-400 hover:bg-slate-900 hover:text-white"
-                      >
-                          <IoClose className="text-2xl" />
-                      </button>
-
-                      {/* Dark Mode Profile Drawer Content */}
-                      <div className="mt-6 flex flex-col items-center text-white">
-                          <div className="relative h-24 w-24 mb-4">
-                              <div className="absolute inset-0 rounded-full border-2 border-amber-500/30"></div>
-                              <div className="absolute inset-2 overflow-hidden rounded-full border-2 border-slate-900">
-                                  <img 
-                                      src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Guest"}&background=random`} 
-                                      alt={displayUser?.fullName || "Guest"}
-                                      className="h-full w-full object-cover" 
-                                  />
-                              </div>
-                          </div>
-                          <h2 className="text-xl font-bold text-white">{displayUser?.fullName || "Guest"}</h2>
-                          <p className="text-sm text-slate-400 mt-1">HireX Pro Member</p>
-                          
-                          <Link href="/mnjuser/profile" className="mt-4 rounded-full border border-slate-700 px-6 py-2 text-sm font-bold text-slate-300 hover:bg-slate-900 hover:text-white hover:border-amber-500/50 transition-all">
-                              View Profile
-                          </Link>
-                      </div>
-
-                      <div className="mt-8 space-y-2">
-                          <button 
-                              onClick={handleLogout}
-                              className="flex w-full items-center gap-4 p-3 rounded-lg hover:bg-slate-900 text-red-400 text-left"
-                          >
-                              <span className="font-medium">Logout</span>
-                          </button>
-                      </div>
-                  </motion.div>
-              </>
-          )}
-       </AnimatePresence>
       </motion.header>
     );
   }
@@ -361,7 +308,27 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
    // If user is logged in (either through Session or Redux), show the authenticated navbar
    if (isMounted && (session?.user || user)) {
        const isRecruiter = user?.role === "recruiter";
-       const activeNavItems = isRecruiter ? recruiterNavItems : navItems;
+       
+       const jobSeekerNavItems = [
+         {
+           href: "/mnjuser/homepage",
+           label: "Dashboard",
+           columns: [
+             {
+               title: "My Account",
+               items: [
+                 { label: "Overview", href: "/mnjuser/homepage" },
+                 { label: "My Applications", href: "/mnjuser/applications" },
+                 { label: "My Profile", href: "/mnjuser/profile" },
+                 { label: "Saved Jobs", href: "/mnjuser/saved-jobs" },
+               ]
+             }
+           ]
+         },
+         ...navItems
+       ];
+
+       const activeNavItems = isRecruiter ? recruiterNavItems : jobSeekerNavItems;
        const homeUrl = isRecruiter ? "/employer/dashboard" : "/mnjuser/homepage";
 
        return (

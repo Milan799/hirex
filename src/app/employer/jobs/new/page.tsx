@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PublicNavbar } from "@/components/layout/Navbar";
 import { useAppSelector } from "@/lib/store/hooks";
 import { notify } from "@/lib/utils";
 import axiosClient from "@/lib/axios/axiosClientInstance";
@@ -62,10 +61,8 @@ export default function PostJob() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <PublicNavbar />
-      
-      <main className="mx-auto max-w-3xl px-4 pt-24 pb-12 sm:px-6 lg:px-8">
+    <div className="w-full">
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             Post a New Job

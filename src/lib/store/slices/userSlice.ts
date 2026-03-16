@@ -174,6 +174,19 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+export const updateProfile = createAsyncThunk(
+  "user/updateProfile",
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.put("/profile", payload);
+      return res.data;
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: unknown } };
+      return rejectWithValue(e.response?.data);
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "user",
   initialState: { data: null as any, status: "idle" },
@@ -197,6 +210,11 @@ const userSlice = createSlice({
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
         state.status = "failed";
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        if (action.payload?.user) {
+          state.data = action.payload.user;
+        }
       });
   },
 });

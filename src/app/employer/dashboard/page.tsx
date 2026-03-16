@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { PublicNavbar } from "@/components/layout/Navbar";
+import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { fetchJobs } from "@/lib/store/slices/jobSlice";
 import { fetchJobApplications, updateApplicationStatus } from "@/lib/store/slices/applicationSlice";
@@ -13,8 +13,9 @@ import {
   MapPin, Clock, CheckCircle2, XCircle, ChevronRight, Plus
 } from "lucide-react";
 
-export default function EmployerDashboard() {
+function DashboardContent() {
   const dispatch = useAppDispatch();
+  const searchParams = useSearchParams();
   const { data: user, status: userStatus } = useAppSelector((state) => state.user);
   const { jobs, status: jobStatus } = useAppSelector((state) => state.job);
   const { applications, status: appStatus } = useAppSelector((state) => state.application);
@@ -26,7 +27,12 @@ export default function EmployerDashboard() {
     if (user?._id) {
       dispatch(fetchJobs({ employerId: user._id }));
     }
-  }, [dispatch, user]);
+    
+    const jobIdFromUrl = searchParams.get("jobId");
+    if (jobIdFromUrl) {
+       setSelectedJobId(jobIdFromUrl);
+    }
+  }, [dispatch, user, searchParams]);
 
   useEffect(() => {
     if (selectedJobId) {
@@ -77,10 +83,8 @@ export default function EmployerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <PublicNavbar />
-      
-      <main className="mx-auto max-w-7xl px-4 pt-24 pb-12 sm:px-6 lg:px-8">
+    <div className="w-full">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -287,5 +291,13 @@ export default function EmployerDashboard() {
         </AnimatePresence>
       </main>
     </div>
+  );
+}
+
+export default function EmployerDashboard() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div></div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
