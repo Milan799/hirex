@@ -205,16 +205,16 @@ const userSlice = createSlice({
         state.status = "loading";
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.data = action.payload;
+        // Normalize: always store the user object directly, never the wrapper
+        state.data = action.payload?.user ?? action.payload;
         state.status = "succeeded";
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
         state.status = "failed";
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
-        if (action.payload?.user) {
-          state.data = action.payload.user;
-        }
+        // Normalize: always store the user object directly
+        state.data = action.payload?.user ?? action.payload;
       });
   },
 });

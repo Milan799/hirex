@@ -4,107 +4,137 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { RxHamburgerMenu } from "react-icons/rx";
-import { IoClose, IoChevronDown } from "react-icons/io5";
-import { FaBell } from "react-icons/fa";
+import { Menu, Bell, ChevronDown, Settings, User, LogOut, Plus } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { clearUser } from "@/lib/store/slices/userSlice";
-import { signOut, useSession } from "next-auth/react";
 
-export function EmployerNavbar({ onMenuClick }: { onMenuClick?: () => void }) {
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const { data: session } = useSession();
-  const { data: userResponse } = useAppSelector((state) => state.user);
+interface Props {
+  onMenuClick: () => void;
+}
+
+export function EmployerNavbar({ onMenuClick }: Props) {
+  const pathname = usePathname();
+  const dispatch = useAppDispatch();
+  const { data: user } = useAppSelector((state) => state.user);
   
-  const user = session?.user || userResponse?.user || userResponse;
-  
-  const [isMounted, setIsMounted] = useState(false);
-  const [displayUser, setDisplayUser] = useState<any>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    if (user) setDisplayUser(user);
-  }, [user]);
-
-  const dispatch = useAppDispatch();
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
     dispatch(clearUser());
-    signOut({ callbackUrl: "/" });
+    window.location.href = "/";
   };
 
-  const ProfileMenuPopUp = () => (
-    <AnimatePresence>
-      {profileDropdownOpen && (
-        <motion.div
-           initial={{ opacity: 0, y: 10 }}
-           animate={{ opacity: 1, y: 0 }}
-           exit={{ opacity: 0, y: 10 }}
-           transition={{ duration: 0.15 }}
-           className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-xl shadow-2xl dark:border-slate-800 dark:bg-slate-950/95"
-        >
-           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-100 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
-                 <img src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "Recruiter"}&background=random`} alt={displayUser?.fullName || "Recruiter"} className="h-full w-full object-cover" />
-              </div>
-              <div className="truncate">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{displayUser?.fullName || "Recruiter"}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{user?.role || "Employer"}</p>
-              </div>
-           </div>
-           <div className="p-2 space-y-1">
-              <Link onClick={() => setProfileDropdownOpen(false)} href="/employer/dashboard" className="flex flex-col px-3 py-2 hover:bg-slate-50 text-left rounded-lg dark:hover:bg-slate-900/50 transition-colors">
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Dashboard</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">Go to your dashboard</span>
-              </Link>
-              <Link onClick={() => setProfileDropdownOpen(false)} href="/employer/profile" className="flex flex-col px-3 py-2 hover:bg-slate-50 text-left rounded-lg dark:hover:bg-slate-900/50 transition-colors">
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Company Profile</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">Update company details</span>
-              </Link>
-              <Link onClick={() => setProfileDropdownOpen(false)} href="/employer/settings" className="flex items-center px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg dark:text-slate-300 dark:hover:bg-slate-900/50 transition-colors">Settings</Link>
-           </div>
-           <div className="p-2 border-t border-slate-100 dark:border-slate-800">
-              <button onClick={handleLogout} className="flex w-full items-center px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-lg dark:text-red-400 dark:hover:bg-red-900/20 transition-colors">Logout</button>
-           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  const pageTitle = {
+    "/employer/dashboard": "Workspace Overview",
+    "/employer/jobs": "Manage Jobs",
+    "/employer/jobs/new": "Post a Job",
+    "/employer/applications": "Applicant Tracking",
+    "/employer/profile": "Company Profile",
+    "/employer/settings": "Account Settings",
+    "/employer/resdex": "Candidate Search (Resdex)",
+  }[pathname] || "Employer Portal";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/80 sm:px-6">
+    <header
+      className={`sticky top-0 z-30 flex h-16 w-full items-center justify-between px-4 sm:px-6 transition-all duration-300 border-b ${
+        scrolled 
+          ? "bg-white/80 border-slate-200 backdrop-blur-md dark:bg-[#0f0f13]/80 dark:border-white/5 shadow-sm"
+          : "bg-white border-slate-200 dark:bg-[#0f0f13] dark:border-white/5"
+      }`}
+    >
       <div className="flex items-center gap-4">
-        {onMenuClick && (
-          <button
-            onClick={onMenuClick}
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 md:hidden"
-          >
-            <RxHamburgerMenu size={20} />
-          </button>
-        )}
+        <button
+          onClick={onMenuClick}
+          className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/10 lg:hidden transition-colors"
+        >
+          <Menu size={20} />
+        </button>
+        <h1 className="hidden text-lg font-black tracking-tight text-slate-900 dark:text-white sm:block transition-colors duration-300">
+          {pageTitle}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">
-          <FaBell size={18} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-red-500 dark:border-slate-950" />
+      <div className="flex items-center gap-3 sm:gap-4 lg:pr-4">
+        <Link
+          href="/employer/jobs/new"
+          className="hidden sm:flex items-center gap-1.5 rounded-full bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 dark:bg-violet-600/15 dark:text-violet-400 dark:hover:bg-violet-600/25 transition-all shadow-sm dark:border dark:border-violet-500/20"
+        >
+          <Plus size={14} /> Post Job
+        </Link>
+
+        {/* Notifications */}
+        <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors">
+          <Bell size={18} />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-violet-600 dark:bg-violet-500 ring-2 ring-white dark:ring-[#0f0f13]" />
         </button>
 
-        <div className="relative" onMouseEnter={() => setProfileDropdownOpen(true)} onMouseLeave={() => setProfileDropdownOpen(false)}>
-          <button className="group flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm transition-all hover:shadow-md dark:border-slate-700 dark:bg-slate-900">
-            <div className="h-8 w-8 overflow-hidden rounded-full border border-slate-200 bg-slate-100 dark:border-slate-700">
-              {isMounted && (
-                <img
-                  src={`https://ui-avatars.com/api/?name=${displayUser?.fullName || "R"}&background=random`}
-                  alt={displayUser?.fullName || "Recruiter"}
-                  className="h-full w-full object-cover"
-                />
-              )}
+        {/* Profile Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowProfile(!showProfile)}
+            className="flex items-center gap-2 rounded-full p-1 pl-1.5 pr-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-white/5"
+          >
+            <div className="h-8 w-8 overflow-hidden rounded-full border-2 border-slate-200 dark:border-[#0f0f13] shadow-sm dark:bg-violet-900/60 transition-colors">
+              <img
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.companyName || "C")}&background=6d28d9&color=fff&size=64`}
+                alt="Avatar"
+                className="h-full w-full object-cover"
+              />
             </div>
-            <IoChevronDown className="text-slate-400 transition-colors group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+            <ChevronDown size={14} className={`text-slate-400 dark:text-slate-500 transition-transform ${showProfile ? "rotate-180" : ""}`} />
           </button>
-          {isMounted && <ProfileMenuPopUp />}
+
+          <AnimatePresence>
+            {showProfile && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-xl dark:bg-[#18181f] dark:border-white/10 dark:shadow-2xl z-50 transition-colors duration-300"
+                >
+                  <div className="border-b border-slate-100 bg-slate-50/50 p-4 dark:border-white/5 dark:bg-white/5 transition-colors duration-300">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate transition-colors duration-300">{user?.companyName || "Company Name"}</p>
+                    <p className="text-xs text-slate-500 truncate transition-colors duration-300">{user?.email || "employer@example.com"}</p>
+                  </div>
+                  <div className="p-2">
+                    <Link
+                      href="/employer/profile"
+                      onClick={() => setShowProfile(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white transition-colors duration-300"
+                    >
+                      <User size={15} className="text-slate-400 dark:text-slate-500 transition-colors duration-300" /> View Profile
+                    </Link>
+                    <Link
+                      href="/employer/settings"
+                      onClick={() => setShowProfile(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-white transition-colors duration-300"
+                    >
+                      <Settings size={15} className="text-slate-400 dark:text-slate-500 transition-colors duration-300" /> Settings
+                    </Link>
+                  </div>
+                  <div className="border-t border-slate-100 p-2 dark:border-white/5 transition-colors duration-300">
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors duration-300"
+                    >
+                      <LogOut size={15} /> Log out
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </header>

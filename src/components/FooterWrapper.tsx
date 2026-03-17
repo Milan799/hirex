@@ -5,16 +5,15 @@ import { Footer } from "@/components/layout/Footer";
 
 export default function FooterWrapper() {
   const pathname = usePathname();
-  
-  // Paths where the footer should be hidden
-  const hiddenPaths = ["/privacy", "/terms", "/blog", "/auth/login", "/auth/register", "/auth/forgot"];
-  
-  // Check if the current path is one of the hidden paths
-  const shouldHideFooter = hiddenPaths.includes(pathname);
 
-  if (shouldHideFooter) {
-    return null;
-  }
+  // Hide footer on all employer portal pages and certain auth/util pages
+  const shouldHideFooter =
+    pathname.startsWith("/employer") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/mnjuser") ||
+    ["/privacy", "/terms", "/fraud-alert"].includes(pathname);
+
+  if (shouldHideFooter) return null;
 
   return <Footer />;
 }

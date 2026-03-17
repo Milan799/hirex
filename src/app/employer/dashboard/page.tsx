@@ -4,299 +4,315 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { fetchJobs } from "@/lib/store/slices/jobSlice";
+import { fetchJobs, fetchEmployerStats } from "@/lib/store/slices/jobSlice";
 import { fetchJobApplications, updateApplicationStatus } from "@/lib/store/slices/applicationSlice";
 import { motion, AnimatePresence } from "framer-motion";
-import { notify } from "@/lib/utils";
-import { 
-  Building2, Briefcase, Users, Activity, 
-  MapPin, Clock, CheckCircle2, XCircle, ChevronRight, Plus
+import {
+  Users, Briefcase, FileText, CheckCircle2, ChevronRight,
+  TrendingUp, Clock, MapPin, XCircle, Loader2, Play
 } from "lucide-react";
+import { notify } from "@/lib/utils";
+
+// Kanban Statuses
+const STATUSES = ["Applied", "Screening", "Interview", "Offer", "Rejected"];
 
 function DashboardContent() {
   const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
-  const { data: user, status: userStatus } = useAppSelector((state) => state.user);
-  const { jobs, status: jobStatus } = useAppSelector((state) => state.job);
+  const atsJobId = searchParams.get("jobId");
+
+  const { data: user } = useAppSelector((state) => state.user);
+  const { jobs, stats, status: jobStatus } = useAppSelector((state) => state.job);
   const { applications, status: appStatus } = useAppSelector((state) => state.application);
-  
-  const [activeTab, setActiveTab] = useState("jobs");
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+
+  const [activeTab, setActiveTab] = useState<"overview" | "ats">(atsJobId ? "ats" : "overview");
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(atsJobId);
+  const [updatingAppId, setUpdatingAppId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?._id) {
+      dispatch(fetchEmployerStats());
       dispatch(fetchJobs({ employerId: user._id }));
     }
-    
-    const jobIdFromUrl = searchParams.get("jobId");
-    if (jobIdFromUrl) {
-       setSelectedJobId(jobIdFromUrl);
-    }
-  }, [dispatch, user, searchParams]);
+  }, [dispatch, user]);
 
   useEffect(() => {
-    if (selectedJobId) {
-      dispatch(fetchJobApplications(selectedJobId));
+    if (atsJobId && jobs.length > 0) {
       setActiveTab("ats");
+      setSelectedJobId(atsJobId);
+    } else if (!atsJobId && activeTab === "ats" && !selectedJobId && jobs.length > 0) {
+      setSelectedJobId(jobs[0]._id);
     }
-  }, [dispatch, selectedJobId]);
+  }, [atsJobId, jobs]);
 
-  const handleStatusChange = async (applicationId: string, newStatus: string) => {
+  useEffect(() => {
+    if (activeTab === "ats" && selectedJobId) {
+      dispatch(fetchJobApplications(selectedJobId));
+    }
+  }, [dispatch, activeTab, selectedJobId]);
+
+  const handleStatusChange = async (appId: string, newStatus: string) => {
+    setUpdatingAppId(appId);
     try {
-      await dispatch(updateApplicationStatus({ applicationId, status: newStatus })).unwrap();
-      notify(`Status updated to ${newStatus}`, "success");
-    } catch (err: any) {
-      notify(err.error || "Failed to update status", "error");
+      await dispatch(updateApplicationStatus({ applicationId: appId, status: newStatus })).unwrap();
+    } catch (err) {
+      notify("Failed to update status", "error");
+    } finally {
+      setUpdatingAppId(null);
     }
   };
 
-  // Group applications by status for Kanban Board
-  const columns = [
-    { title: "Pending", status: "Pending", accent: "amber", borderClasses: "border-amber-500", bgClasses: "bg-linear-to-b from-amber-50/80 to-transparent dark:from-amber-950/20" },
-    { title: "Shortlisted", status: "Shortlisted", accent: "blue", borderClasses: "border-blue-500", bgClasses: "bg-linear-to-b from-blue-50/80 to-transparent dark:from-blue-950/20" },
-    { title: "Interview", status: "Interview", accent: "purple", borderClasses: "border-purple-500", bgClasses: "bg-linear-to-b from-purple-50/80 to-transparent dark:from-purple-950/20" },
-    { title: "Rejected", status: "Rejected", accent: "red", borderClasses: "border-red-500", bgClasses: "bg-linear-to-b from-red-50/80 to-transparent dark:from-red-950/20" },
+  const statCards = [
+    { label: "Active Jobs", value: stats?.activeJobs || 0, icon: Briefcase, color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-500/10", border: "border-blue-200 dark:border-blue-500/20" },
+    { label: "Total Applications", value: stats?.totalApplications || 0, icon: FileText, color: "text-violet-500", bg: "bg-violet-100 dark:bg-violet-500/10", border: "border-violet-200 dark:border-violet-500/20" },
+    { label: "Candidates Hired", value: stats?.hiredCandidates || 0, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-100 dark:bg-emerald-500/10", border: "border-emerald-200 dark:border-emerald-500/20" },
+    { label: "Total Views", value: stats?.totalViews || 0, icon: Users, color: "text-amber-500", bg: "bg-amber-100 dark:bg-amber-500/10", border: "border-amber-200 dark:border-amber-500/20" },
   ];
 
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
-
-  if (!isMounted) {
+  if (jobStatus === "loading" && !stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  // If user is loaded but not a recruiter, we could show an error, but for now we let them see the UI 
-  // or at least wait for the user to be fetched if it's null.
-  if (!user && userStatus !== "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center">
-          <h2 className="text-xl font-bold">Please login to view Employer Dashboard</h2>
-          <Link href="/auth/login" className="text-blue-500 hover:underline mt-2 inline-block">Go to Login</Link>
+      <div className="min-h-full bg-slate-50 px-5 py-6 sm:px-8 dark:bg-[#0f0f13] transition-colors duration-300">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          {[1,2,3,4].map((i) => <div key={i} className="h-28 animate-pulse rounded-2xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/5" />)}
         </div>
+        <div className="h-96 w-full animate-pulse rounded-2xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/5" />
       </div>
     );
   }
 
   return (
-    <div className="w-full">
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Employer Dashboard</h1>
-              <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800/50">Recruiter Portal</span>
-            </div>
-            <p className="text-sm font-medium text-slate-500 mt-1 dark:text-slate-400">
-              Manage your job postings and track candidates seamlessly.
-            </p>
-          </div>
-          <Link href="/employer/jobs/new" className="flex items-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all">
-            <Plus size={18} /> Post a New Job
-          </Link>
-        </div>
+    <div className="min-h-full bg-slate-50 px-5 py-6 sm:px-8 dark:bg-[#0f0f13] transition-colors duration-300">
+      
+      {/* Tab Nav */}
+      <div className="mb-6 flex items-center gap-1 rounded-xl bg-slate-200/50 p-1 w-fit dark:bg-white/5 transition-colors duration-300">
+        <button
+          onClick={() => setActiveTab("overview")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
+            activeTab === "overview" ? "bg-white text-slate-900 shadow-sm dark:bg-violet-600 dark:text-white dark:shadow-violet-900/50" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
+          }`}
+        >
+          <TrendingUp size={16} /> Overview
+        </button>
+        <button
+          onClick={() => setActiveTab("ats")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold transition-all ${
+            activeTab === "ats" ? "bg-white text-slate-900 shadow-sm dark:bg-violet-600 dark:text-white dark:shadow-violet-900/50" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
+          }`}
+        >
+          <Users size={16} /> Tracker (ATS)
+        </button>
+      </div>
 
-        {/* Quick Stats Row */}
-        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { label: "Active Jobs", value: jobs.length, icon: <Briefcase className="h-5 w-5 text-blue-500" />, bg: "bg-blue-50 dark:bg-blue-900/10" },
-            { label: "Total Applicants", value: applications.length || 0, icon: <Users className="h-5 w-5 text-purple-500" />, bg: "bg-purple-50 dark:bg-purple-900/10" },
-            { label: "Interviews", value: applications.filter(a => a.status === 'Interview').length || 0, icon: <Clock className="h-5 w-5 text-orange-500" />, bg: "bg-orange-50 dark:bg-orange-900/10" },
-            { label: "Hired", value: applications.filter(a => a.status === 'Hired').length || 0, icon: <CheckCircle2 className="h-5 w-5 text-green-500" />, bg: "bg-green-50 dark:bg-green-900/10" },
-          ].map((stat, idx) => (
-            <div key={idx} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.bg}`}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{stat.label}</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Dashboard Tabs */}
-        <div className="mb-6 flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-px">
-          <button
-            onClick={() => { setActiveTab("jobs"); setSelectedJobId(null); }}
-            className={`px-4 py-2 font-semibold text-sm rounded-t-lg transition-colors ${
-              activeTab === "jobs" 
-                ? "border-b-2 border-purple-600 text-purple-600 dark:border-purple-500 dark:text-purple-400" 
-                : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-            }`}
-          >
-            Active Jobs
-          </button>
-          {selectedJobId && (
-            <button
-              onClick={() => setActiveTab("ats")}
-              className={`px-4 py-2 font-semibold text-sm rounded-t-lg transition-colors ${
-                activeTab === "ats" 
-                  ? "border-b-2 border-purple-600 text-purple-600 dark:border-purple-500 dark:text-purple-400" 
-                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-              }`}
-            >
-              ATS Board
-            </button>
-          )}
-        </div>
-
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          {activeTab === "jobs" && (
-            <motion.div
-              key="jobs"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-            >
-              {jobStatus === "loading" && <p className="text-slate-500">Loading your jobs...</p>}
-              {jobStatus === "succeeded" && jobs.length === 0 && (
-                <div className="col-span-full rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-800">
-                  <Briefcase className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-700" />
-                  <h3 className="mt-4 text-lg font-bold">No jobs posted yet.</h3>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Get started by posting your first opening.</p>
-                </div>
-              )}
-              {jobs.map((job: any) => (
-                <div 
-                  key={job._id}
-                  onClick={() => setSelectedJobId(job._id)}
-                  className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-blue-300 hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-800"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-bold text-lg group-hover:text-blue-600 transition-colors dark:group-hover:text-blue-400">{job.title}</h3>
-                      <p className="text-xs text-slate-500 line-clamp-1 mt-1 dark:text-slate-400">{job.location} • {job.experienceLevel}</p>
+      <AnimatePresence mode="wait">
+        {activeTab === "overview" && (
+          <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+              {statCards.map((s, i) => (
+                <div key={i} className="group relative overflow-hidden rounded-2xl bg-white border border-slate-200 p-5 hover:border-violet-300 transition-all dark:bg-white/3 dark:border-white/8 dark:hover:border-violet-500/30 dark:hover:bg-white/5">
+                  <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full blur-2xl transition-opacity opacity-0 group-hover:opacity-100 ${s.bg}`} />
+                  <div className="relative flex items-center gap-4">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl border ${s.bg} ${s.border} ${s.color}`}>
+                      <s.icon size={22} />
                     </div>
-                    <span className="rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      {job.status}
-                    </span>
-                  </div>
-                  
-                  <div className="mt-4 flex flex-wrap gap-2 mb-4">
-                    {job.skillsRequired?.slice(0, 3).map((skill: string) => (
-                      <span key={skill} className="rounded bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        {skill}
-                      </span>
-                    ))}
-                    {(job.skillsRequired?.length || 0) > 3 && <span className="text-[10px] text-slate-400">+{job.skillsRequired.length - 3}</span>}
-                  </div>
-                  
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <p className="text-xs font-semibold text-slate-500">View Applicants <ChevronRight className="inline h-3 w-3" /></p>
-                    <p className="text-[10px] text-slate-400 flex items-center gap-1"><Clock size={12}/> {new Date(job.createdAt).toLocaleDateString()}</p>
+                    <div>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white transition-colors duration-300">{s.value}</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500 transition-colors duration-300">{s.label}</p>
+                    </div>
                   </div>
                 </div>
               ))}
-            </motion.div>
-          )}
+            </div>
 
-          {activeTab === "ats" && (
-            <motion.div
-              key="ats"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <div className="mb-4">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Users className="text-blue-500" /> Applicant Tracking Area
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Move candidates through your hiring pipeline.</p>
+            {/* Recents */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Recent Jobs */}
+              <div className="lg:col-span-2 rounded-2xl bg-white border border-slate-200 p-6 dark:bg-white/3 dark:border-white/8 transition-colors duration-300">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white transition-colors duration-300">Active Postings</h3>
+                  <Link href="/employer/jobs" className="text-xs font-bold text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300 flex items-center gap-1 transition-colors">
+                    View All <ChevronRight size={14} />
+                  </Link>
+                </div>
+                
+                {jobs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 rounded-xl border border-dashed border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/3 transition-colors duration-300">
+                    <Briefcase className="text-slate-300 dark:text-slate-600 mb-3" size={32} />
+                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No active jobs</p>
+                    <Link href="/employer/jobs/new" className="mt-3 text-sm font-bold text-violet-600 dark:text-violet-400 hover:underline">Post your first job</Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {jobs.slice(0, 4).map((job: any) => (
+                      <div key={job._id} className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-violet-200 transition-colors dark:border-white/5 dark:bg-white/5 dark:hover:border-violet-500/30">
+                        <div>
+                          <p className="font-bold text-slate-900 dark:text-white group-hover:text-violet-600 dark:group-hover:text-violet-300 transition-colors">{job.title}</p>
+                          <div className="flex items-center gap-3 mt-1 text-xs font-semibold text-slate-500 dark:text-slate-500">
+                            <span className="flex items-center gap-1"><MapPin size={12} /> {job.location}</span>
+                            <span className="flex items-center gap-1"><Clock size={12} /> {new Date(job.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-emerald-100 border border-emerald-200 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400">
+                          {job.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {appStatus === "loading" ? (
-                <div className="flex justify-center p-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+              {/* Quick Actions */}
+              <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-purple-800 p-6 text-white shadow-xl shadow-purple-900/20 dark:shadow-purple-900/50">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Play size={18} className="fill-white" /> Quick Actions</h3>
+                <div className="space-y-3">
+                  <Link href="/employer/jobs/new" className="flex w-full items-center justify-between rounded-xl bg-white/10 p-4 font-bold hover:bg-white/20 transition-colors border border-white/5">
+                    Post a New Job <ChevronRight size={16} />
+                  </Link>
+                  <button onClick={() => setActiveTab("ats")} className="flex w-full items-center justify-between rounded-xl bg-white/10 p-4 font-bold hover:bg-white/20 transition-colors border border-white/5">
+                    Review Applicants <ChevronRight size={16} />
+                  </button>
+                  <Link href="/employer/resdex" className="flex w-full items-center justify-between rounded-xl bg-white/10 p-4 font-bold hover:bg-white/20 transition-colors border border-white/5">
+                    Search Candidates <ChevronRight size={16} />
+                  </Link>
                 </div>
-              ) : (
-                <div className="grid gap-6 md:grid-cols-4 overflow-x-auto pb-6 pt-4 px-2 snap-x">
-                  {columns.map((col) => {
-                    const colApps = applications.filter((a: any) => a.status === col.status);
-                    
-                    return (
-                      <div key={col.title} className={`flex flex-col rounded-3xl border border-slate-200/50 p-5 shadow-sm min-w-72 snap-center transition-colors dark:border-slate-800 ${col.bgClasses} ring-1 ring-slate-900/5 dark:ring-white/5`}>
-                        <div className="mb-5 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                             <span className={`h-2.5 w-2.5 rounded-full bg-${col.accent}-500 shadow-[0_0_8px_rgba(0,0,0,0.3)] shadow-${col.accent}-500/50`}></span>
-                             <h3 className="font-bold text-sm tracking-wide text-slate-800 dark:text-slate-200 uppercase">{col.title}</h3>
-                          </div>
-                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-slate-700 shadow-sm ring-1 ring-slate-900/5 dark:bg-slate-900 dark:text-slate-300 dark:ring-white/10">
-                            {colApps.length}
-                          </span>
-                        </div>
-                        
-                        <div className="flex flex-col gap-4 min-h-[50vh]">
-                          {colApps.map((app: any) => (
-                            <motion.div 
-                              layoutId={app._id}
-                              key={app._id} 
-                              className={`group cursor-grab active:cursor-grabbing rounded-2xl border-l-4 ${col.borderClasses} border-r border-t border-b border-r-slate-200 border-t-slate-200 border-b-slate-200 bg-white p-5 shadow-sm hover:shadow-lg transition-all dark:border-r-slate-800 dark:border-t-slate-800 dark:border-b-slate-800 dark:bg-slate-900 dark:hover:shadow-black/40`}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">{app.candidateId?.fullName || "Unknown Candidate"}</h4>
-                                  <p className="text-xs font-medium text-slate-500 mt-1 dark:text-slate-400 truncate max-w-[180px]">{app.candidateId?.email}</p>
-                                </div>
-                              </div>
-                              
-                              <div className="mt-4 flex flex-wrap gap-1.5">
-                                {app.candidateId?.skills?.slice(0, 3).map((s: string) => (
-                                  <span key={s} className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">{s}</span>
-                                ))}
-                                {(app.candidateId?.skills?.length || 0) > 3 && <span className="text-[10px] font-medium text-slate-400 self-center ml-1">+{app.candidateId.skills.length - 3}</span>}
-                              </div>
-                              
-                              <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-                                  {app.resumeUrl ? (
-                                    <a href={app.resumeUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600 hover:bg-blue-100 transition-colors dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50">
-                                      View CV
-                                    </a>
-                                  ) : <span className="text-[10px] text-slate-400">No CV</span>}
-                                  
-                                  <select 
-                                    value={app.status}
-                                    onChange={(e) => handleStatusChange(app._id, e.target.value)}
-                                    className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-700 outline-none cursor-pointer hover:border-blue-300 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-colors"
-                                  >
-                                    <option value="Pending">Move to Pending</option>
-                                    <option value="Shortlisted">Shortlist candidate</option>
-                                    <option value="Interview">Schedule Interview</option>
-                                    <option value="Rejected" className="text-red-500">Reject candidate</option>
-                                  </select>
-                              </div>
-                            </motion.div>
-                          ))}
-                          
-                          {colApps.length === 0 && (
-                            <div className="flex h-32 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200/50 bg-white/50 dark:border-slate-800/50 dark:bg-slate-900/20 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-                              Drop here
-                            </div>
-                          )}
-                        </div>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+
+        {/* ATS KANBAN BOARD */}
+        {activeTab === "ats" && (
+          <motion.div key="ats" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="h-full flex flex-col">
+            
+            {/* Job Selector Header */}
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl bg-white border border-slate-200 p-5 dark:bg-white/3 dark:border-white/8 transition-colors duration-300">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 transition-colors duration-300">
+                  <Users className="text-violet-600 dark:text-violet-400" /> Applicant Tracking
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-500 mt-0.5">Move candidates across the board to update their status.</p>
+              </div>
+              
+              <select
+                value={selectedJobId || ""}
+                onChange={(e) => setSelectedJobId(e.target.value)}
+                className="w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm font-bold text-slate-900 outline-none focus:border-violet-500 dark:border-white/10 dark:bg-[#18181f] dark:text-white dark:focus:border-violet-500/50 transition-colors"
+              >
+                {jobs.length === 0 ? (
+                  <option value="" disabled>No active jobs</option>
+                ) : (
+                  jobs.map((j: any) => (
+                    <option key={j._id} value={j._id}>{j.title}</option>
+                  ))
+                )}
+              </select>
+            </div>
+
+            {/* Kanban Board */}
+            {!selectedJobId ? (
+              <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-slate-300 py-20 dark:border-white/10 transition-colors duration-300">
+                <p className="font-semibold text-slate-400 dark:text-slate-500">Please select or post a job to track applicants.</p>
+              </div>
+            ) : appStatus === "loading" ? (
+              <div className="flex flex-1 items-center justify-center py-20">
+                <Loader2 size={32} className="animate-spin text-violet-500" />
+              </div>
+            ) : (
+              <div className="flex flex-1 gap-6 overflow-x-auto pb-4 custom-scrollbar">
+                {STATUSES.map((status) => {
+                  const colApps = applications.filter((a: any) => a.status === status);
+                  
+                  // Status Colors
+                  const colors: Record<string, string> = {
+                    "Applied":   "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400",
+                    "Screening": "border-purple-200 bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:border-purple-500/20 dark:text-purple-400",
+                    "Interview": "border-amber-200 bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400",
+                    "Offer":     "border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400",
+                    "Rejected":  "border-red-200 bg-red-50 text-red-700 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400",
+                  };
+
+                  return (
+                    <div key={status} className="flex w-80 shrink-0 flex-col rounded-2xl bg-slate-100 p-4 dark:bg-white/3 border border-slate-200 dark:border-transparent transition-colors duration-300">
+                      
+                      {/* Column Header */}
+                      <div className="mb-4 flex items-center justify-between">
+                        <span className={`rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wider ${colors[status]}`}>
+                          {status}
+                        </span>
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-white/10 dark:text-slate-400">
+                          {colApps.length}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+
+                      {/* Cards */}
+                      <div className="flex flex-1 flex-col gap-3 overflow-y-auto min-h-[150px]">
+                        {colApps.map((app: any) => (
+                          <div key={app._id} className="group relative rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-violet-300 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:border-violet-500/40 transition-all duration-200">
+                            
+                            <div className="mb-3 flex items-start gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-violet-900/50 border border-slate-200 dark:border-violet-700/30 overflow-hidden">
+                                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(app.candidateId?.fullName || "A")}&background=6d28d9&color=fff&size=80`} alt="" className="h-full w-full" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-bold text-slate-900 dark:text-white truncate transition-colors duration-300">{app.candidateId?.fullName || "Anonymous"}</p>
+                                <p className="text-[10px] text-slate-500 truncate transition-colors duration-300">{app.candidateId?.email}</p>
+                              </div>
+                            </div>
+
+                            <div className="mb-3 border-t border-slate-100 pt-3 dark:border-white/5 transition-colors duration-300">
+                              <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5 transition-colors duration-300">
+                                <Clock size={11} /> Applied {new Date(app.appliedAt).toLocaleDateString()}
+                              </p>
+                              {app.coverLetter && (
+                                <p className="mt-1.5 line-clamp-2 text-xs text-slate-500 italic dark:text-slate-500 transition-colors duration-300">"{app.coverLetter}"</p>
+                              )}
+                            </div>
+
+                            {/* Status Mover Dropdown */}
+                            <div className="relative">
+                              <select
+                                disabled={updatingAppId === app._id}
+                                value={app.status}
+                                onChange={(e) => handleStatusChange(app._id, e.target.value)}
+                                className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 outline-none hover:bg-slate-100 focus:border-violet-500 disabled:opacity-50 dark:border-white/10 dark:bg-[#18181f] dark:text-slate-300 dark:hover:bg-white/5 dark:focus:border-violet-500/50 transition-colors"
+                              >
+                                {STATUSES.map(s => (
+                                  <option key={s} value={s}>Move to {s}</option>
+                                ))}
+                              </select>
+                              {updatingAppId === app._id && (
+                                <Loader2 size={12} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-violet-500" />
+                              )}
+                            </div>
+
+                          </div>
+                        ))}
+                        
+                        {colApps.length === 0 && (
+                          <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center dark:border-white/10 transition-colors duration-300">
+                            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500">No candidates</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
 
 export default function EmployerDashboard() {
   return (
-    <Suspense fallback={<div className="flex justify-center p-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div></div>}>
+    <Suspense fallback={<div className="min-h-full bg-[#0f0f13] flex items-center justify-center"><Loader2 className="animate-spin text-violet-500" /></div>}>
       <DashboardContent />
     </Suspense>
   );

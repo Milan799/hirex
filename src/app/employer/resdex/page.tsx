@@ -1,223 +1,209 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAppSelector } from "@/lib/store/hooks";
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import axiosClient from "@/lib/axios/axiosClientInstance";
-import { 
-  Search, MapPin, Briefcase, GraduationCap, 
-  FileText, Mail, Phone, ChevronRight 
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, MapPin, Briefcase, GraduationCap, Mail, Phone, FileText, Loader2, User } from "lucide-react";
 
 export default function Resdex() {
-  const { data: user } = useAppSelector((state) => state.user);
-  const [candidates, setCandidates] = useState([]);
-  const [loading, setLoading] = useState(false);
-  
   const [keyword, setKeyword] = useState("");
+  const [location, setLocation] = useState("");
+  const [experience, setExperience] = useState("Any");
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
-  const searchCandidates = async () => {
+  const search = useCallback(async () => {
     setLoading(true);
+    setSearched(true);
     try {
-      // Note: Ideally, there would be a dedicated /api/candidates search route
-      // Here we simulate fetching users who have role = "candidate" matching keyword on skills
-      // In a real production scenario, the backend would handle the exact filtering
-      const res = await axiosClient.get(`/profile?role=candidate&keyword=${keyword}`);
-      // Assuming GET /api/profile returns an array if queried like search, but wait:
-      // We didn't explicitly write a GET /profile search route. We only wrote GET profile for current user.
-      // So let's mock the candidates for the UI display format, or we can use the same pattern we did elsewhere:
-      if (res.data.users) {
-         setCandidates(res.data.users);
-      } else if (res.data.user && Array.isArray(res.data.user) === false) {
-         // Fallback if the API doesn't support array returning yet
-         setCandidates([{ ...res.data.user, mock: true }] as any);
-      }
-    } catch (err: any) {
-      console.error(err);
-      // Fallback mock data for visual demonstration of Resdex
-      setCandidates([
-        {
-          _id: "c1",
-          fullName: "John Doe",
-          email: "john@example.com",
-          phone: "+91 9876543210",
-          location: "Bangalore",
-          skills: ["React", "Next.js", "TypeScript", "Node.js"],
-          experience: [{ title: "Frontend Eng", company: "TechCorp", years: "3 Yrs", summary: "Built scalable UIs" }],
-          education: [{ degree: "B.Tech Computer Science", institution: "NIT", year: "2020" }],
-          resumeUrl: "#",
-        },
-        {
-          _id: "c2",
-          fullName: "Jane Smith",
-          email: "jane@example.com",
-          phone: "+91 9123456780",
-          location: "Remote",
-          skills: ["Python", "Django", "AWS", "Docker"],
-          experience: [{ title: "Backend Lead", company: "DataCo", years: "5 Yrs", summary: "Architected microservices" }],
-          education: [{ degree: "M.Sc Software Eng", institution: "IIT", year: "2018" }],
-          resumeUrl: "#",
-        }
-      ] as any);
+      const params: any = { role: "candidate" };
+      if (keyword)  params.keyword  = keyword;
+      if (location) params.location = location;
+      if (experience !== "Any") params.experience = experience;
+
+      const res = await axiosClient.get("/profile", { params });
+      const data = res.data.users || (res.data.user ? [res.data.user] : []);
+      setCandidates(data);
+    } catch {
+      setCandidates([]);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-  };
+  }, [keyword, location, experience]);
 
-  useEffect(() => {
-    if (user?.role === "recruiter") {
-      searchCandidates();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  if (!user || user.role !== "recruiter") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <p className="text-slate-500">Loading or unauthorized...</p>
-      </div>
-    );
-  }
+  const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter") search(); };
 
   return (
-    <div className="w-full">
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-               Resdex Candidate Search
-            </h1>
-            <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">
-              Proactively find the best talent. Search millions of resumes instantly.
-            </p>
-          </div>
-        </div>
+    <div className="min-h-full bg-slate-50 px-5 py-6 sm:px-8 dark:bg-[#0f0f13] transition-colors duration-300">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white transition-colors duration-300">Candidate Search</h1>
+        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-500 transition-colors duration-300">Find qualified talent from thousands of active job seekers.</p>
+      </div>
 
-        {/* Search Bar */}
-        <div className="mb-8 overflow-hidden rounded-2xl bg-white shadow-lg shadow-slate-200/50 dark:bg-slate-900 dark:shadow-none p-4 border border-slate-200 dark:border-slate-800">
-          <div className="flex gap-2">
-            <div className="flex flex-1 items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800">
-              <Search className="text-slate-400" />
-              <input 
-                type="text" 
-                placeholder="Search by skills, roles, or keywords..." 
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && searchCandidates()}
-                className="w-full bg-transparent outline-none dark:text-white"
+      {/* Search bar */}
+      <div className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 dark:border-white/8 dark:bg-white/3 transition-colors duration-300 shadow-sm shadow-slate-200/50 dark:shadow-none">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-violet-500 transition-colors dark:border-white/10 dark:bg-white/5 dark:focus-within:border-violet-500/50">
+            <Search size={16} className="text-slate-400 dark:text-slate-600 shrink-0" />
+            <input
+              type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Skills, job titles, keywords..."
+              className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder-slate-400 dark:text-white dark:placeholder-slate-600"
+            />
+          </div>
+          <div className="flex gap-3">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-violet-500 transition-colors dark:border-white/10 dark:bg-white/5 dark:focus-within:border-violet-500/50">
+              <MapPin size={14} className="text-slate-400 dark:text-slate-600 shrink-0" />
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="City or Remote"
+                className="w-28 bg-transparent text-sm text-slate-900 outline-none placeholder-slate-400 dark:text-white dark:placeholder-slate-600"
               />
             </div>
-            <button 
-              onClick={searchCandidates}
-              className="rounded-xl bg-blue-600 px-8 font-bold text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors"
+            <select
+              value={experience}
+              onChange={(e) => setExperience(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500 outline-none focus:border-violet-500 transition-colors dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:focus:border-violet-500/50"
             >
-              Search Database
+              {["Any", "0-2 Yrs", "2-5 Yrs", "5-8 Yrs", "8+ Yrs"].map((o) => (
+                <option key={o} value={o} className="bg-white dark:bg-[#18181f]">{o}</option>
+              ))}
+            </select>
+            <button
+              onClick={search}
+              className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-500 transition-colors shadow-lg shadow-violet-900/40 dark:shadow-violet-900/50"
+            >
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+              Search
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Results */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-            
-          {/* Filters Sidebar */}
-          <div className="hidden lg:block">
-             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                 <h2 className="font-bold mb-4">Filters</h2>
-                 <div className="space-y-4">
-                     <div>
-                         <label className="text-xs font-semibold text-slate-500">Location</label>
-                         <input type="text" placeholder="e.g. Remote" className="w-full mt-1 border-b border-slate-200 py-1 text-sm bg-transparent outline-none dark:border-slate-700" />
-                     </div>
-                     <div>
-                         <label className="text-xs font-semibold text-slate-500">Experience</label>
-                         <select className="w-full mt-1 border-b border-slate-200 py-1 text-sm bg-transparent outline-none dark:border-slate-700 text-slate-700 dark:text-slate-300">
-                             <option>Any Experience</option>
-                             <option>0-2 Years</option>
-                             <option>3-5 Years</option>
-                             <option>6+ Years</option>
-                         </select>
-                     </div>
-                 </div>
-             </div>
-          </div>
-
-          {/* Candidate Feed */}
-          <div className="lg:col-span-3 space-y-4">
-              <p className="text-sm font-semibold text-slate-500 mb-4">
-                  {candidates.length} candidates found matching your criteria.
-              </p>
-
-              {loading ? (
-                  <p className="text-center py-10 text-slate-400">Searching database...</p>
-              ) : (
-                  candidates.map((candidate: any, index: number) => (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        key={candidate._id} 
-                        className="group flex flex-col md:flex-row gap-6 p-6 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-blue-300 hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900"
-                      >
-                         <div className="flex-1">
-                             <div className="flex items-start justify-between">
-                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                                        {candidate.fullName}
-                                    </h3>
-                                    <div className="mt-1 flex flex-wrap gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                        <span className="flex items-center gap-1"><Briefcase size={12}/> {candidate.experience?.[0]?.years || "3 Yrs"}</span>
-                                        <span className="flex items-center gap-1"><MapPin size={12}/> {candidate.location || "Location Unknown"}</span>
-                                    </div>
-                                 </div>
-                                 <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold dark:bg-blue-900/30 dark:text-blue-400">
-                                     High Match
-                                 </div>
-                             </div>
-
-                             <div className="mt-4 flex flex-wrap gap-2">
-                                 {candidate.skills?.map((skill: string) => (
-                                     <span key={skill} className="rounded-md bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                         {skill}
-                                     </span>
-                                 ))}
-                             </div>
-
-                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-4 text-xs text-slate-600 dark:text-slate-400">
-                                 <div>
-                                     <p className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white mb-1">
-                                        <Briefcase size={12} className="text-blue-500" /> Current Role
-                                     </p>
-                                     <p className="line-clamp-1">{candidate.experience?.[0]?.title} at {candidate.experience?.[0]?.company}</p>
-                                 </div>
-                                 <div>
-                                     <p className="flex items-center gap-1.5 font-semibold text-slate-900 dark:text-white mb-1">
-                                        <GraduationCap size={12} className="text-blue-500" /> Education
-                                     </p>
-                                     <p className="line-clamp-1">{candidate.education?.[0]?.degree} from {candidate.education?.[0]?.institution}</p>
-                                 </div>
-                             </div>
-                         </div>
-
-                         <div className="flex flex-row md:flex-col gap-3 justify-center md:border-l border-slate-100 md:pl-6 dark:border-slate-800">
-                             <a href={`mailto:${candidate.email}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 px-4 py-2 text-xs font-bold hover:bg-blue-100 transition-colors dark:border-blue-900/50 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50">
-                                 <Mail size={14} /> Message
-                             </a>
-                             <a href={`tel:${candidate.phone}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-2 text-xs font-bold hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-                                 <Phone size={14} /> Call
-                             </a>
-                             {candidate.resumeUrl && (
-                                <a href={candidate.resumeUrl} target="_blank" rel="noreferrer" className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-2 text-xs font-bold hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-                                    <FileText size={14} /> Resume
-                                </a>
-                             )}
-                         </div>
-                      </motion.div>
-                  ))
-              )}
-
-          </div>
+      {/* Results */}
+      {loading && (
+        <div className="grid gap-4">
+          {[1,2,3].map((i) => (
+            <div key={i} className="h-36 animate-pulse rounded-2xl bg-white border border-slate-200 dark:bg-white/5 dark:border-white/5 transition-colors duration-300" />
+          ))}
         </div>
-      </main>
+      )}
+
+      {!loading && searched && candidates.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center dark:border-white/10 dark:bg-white/3 transition-colors duration-300">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 border border-violet-200 dark:bg-violet-600/15 dark:border-violet-500/20">
+            <User size={28} className="text-violet-600 dark:text-violet-400" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 transition-colors duration-300">No candidates found</h3>
+          <p className="text-sm text-slate-500 max-w-xs transition-colors duration-300">Try different keywords or broaden your filters.</p>
+        </div>
+      )}
+
+      {!loading && !searched && (
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white py-20 text-center dark:border-white/10 dark:bg-white/3 transition-colors duration-300">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 border border-violet-200 dark:bg-violet-600/15 dark:border-violet-500/20">
+            <Search size={28} className="text-violet-600 dark:text-violet-400" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 transition-colors duration-300">Search for candidates</h3>
+          <p className="text-sm text-slate-500 max-w-xs transition-colors duration-300">Enter a skill, title, or keyword and hit Search to browse talent.</p>
+        </div>
+      )}
+
+      <AnimatePresence>
+        <div className="grid gap-4">
+          {candidates.map((c: any, idx: number) => (
+            <motion.div
+              key={c._id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.06 }}
+              className="group flex flex-col md:flex-row gap-6 rounded-2xl border border-slate-200 bg-white p-6 hover:border-violet-300 hover:shadow-lg transition-all dark:border-white/8 dark:bg-white/3 dark:hover:border-violet-500/30 dark:hover:bg-white/5 duration-300"
+            >
+              {/* Left: Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-violet-100 border border-violet-200 dark:bg-violet-900/60 dark:border-violet-700/30">
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(c.fullName || "C")}&background=6d28d9&color=fff&size=80`}
+                        alt={c.fullName}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 group-hover:text-violet-700 dark:text-white dark:group-hover:text-violet-300 transition-colors">{c.fullName || "Anonymous"}</h3>
+                      <div className="flex flex-wrap gap-3 mt-0.5 text-[10px] font-semibold text-slate-500 dark:text-slate-600">
+                        {c.experience?.[0] && (
+                          <span className="flex items-center gap-1"><Briefcase size={10} />{c.experience[0].years || "N/A"}</span>
+                        )}
+                        {(c.location?.city || c.location) && (
+                          <span className="flex items-center gap-1"><MapPin size={10} />{c.location?.city || c.location}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-500/15 dark:border-blue-500/20 dark:text-blue-400 transition-colors">
+                    Active
+                  </span>
+                </div>
+
+                {/* Skills */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {(c.skills || []).slice(0, 6).map((s: string) => (
+                    <span key={s} className="rounded-lg bg-slate-50 border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-white/5 dark:border-white/8 dark:text-slate-400 transition-colors">{s}</span>
+                  ))}
+                </div>
+
+                {/* Exp / Edu */}
+                {(c.experience?.[0] || c.education?.[0]) && (
+                  <div className="grid grid-cols-2 gap-4 text-xs text-slate-600 border-t border-slate-100 pt-3 dark:text-slate-600 dark:border-white/5 transition-colors duration-300">
+                    {c.experience?.[0] && (
+                      <div>
+                        <p className="flex items-center gap-1 font-bold text-slate-400 mb-0.5 transition-colors duration-300"><Briefcase size={11} className="text-violet-500" />Latest Role</p>
+                        <p className="truncate text-slate-700 dark:text-slate-400 transition-colors duration-300">{c.experience[0].title} at {c.experience[0].company}</p>
+                      </div>
+                    )}
+                    {c.education?.[0] && (
+                      <div>
+                        <p className="flex items-center gap-1 font-bold text-slate-400 mb-0.5 transition-colors duration-300"><GraduationCap size={11} className="text-violet-500" />Education</p>
+                        <p className="truncate text-slate-700 dark:text-slate-400 transition-colors duration-300">{c.education[0].degree} — {c.education[0].institution}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex flex-row md:flex-col gap-2 shrink-0 md:border-l border-slate-100 md:pl-6 justify-start md:justify-center dark:border-white/5 transition-colors duration-300">
+                <a href={`mailto:${c.email}`}
+                  className="flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 hover:text-violet-800 dark:border-violet-500/20 dark:bg-violet-600/15 dark:text-violet-400 dark:hover:bg-violet-600/25 dark:hover:text-violet-300 transition-all">
+                  <Mail size={13} /> Message
+                </a>
+                {c.phone && (
+                  <a href={`tel:${c.phone}`}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-all">
+                    <Phone size={13} /> Call
+                  </a>
+                )}
+                {c.resumeUrl && (
+                  <a href={c.resumeUrl} target="_blank" rel="noreferrer"
+                    className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-all">
+                    <FileText size={13} /> Resume
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </AnimatePresence>
     </div>
   );
 }
