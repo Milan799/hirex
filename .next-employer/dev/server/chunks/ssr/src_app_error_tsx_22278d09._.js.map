@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///D:/HireX/src/app/error.tsx"],"sourcesContent":["\"use client\" // Error components must be Client Components\r\n\r\nexport default function Error({ reset }: { reset: () => void }) {\r\n  return (\r\n    <div className=\"flex flex-col items-center justify-center min-h-screen\">\r\n      <h2 className=\"text-xl font-bold text-red-600\">Something went wrong!</h2>\r\n      <button onClick={() => reset()} className=\"mt-4 px-4 py-2 bg-blue-500 text-white rounded\">\r\n        Try again\r\n      </button>\r\n    </div>\r\n  )\r\n}"],"names":[],"mappings":";;;;;AAAA,cAAa,6CAA6C;;AAE3C,SAAS,MAAM,EAAE,KAAK,EAAyB;IAC5D,qBACE,8OAAC;QAAI,WAAU;;0BACb,8OAAC;gBAAG,WAAU;0BAAiC;;;;;;0BAC/C,8OAAC;gBAAO,SAAS,IAAM;gBAAS,WAAU;0BAAgD;;;;;;;;;;;;AAKhG"}}]
-}
