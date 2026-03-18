@@ -1,18 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PublicNavbar } from "@/components/layout/Navbar";
 import { 
-  User, Mail, Phone, MapPin, Edit2, Upload, Download, Plus, 
+  User as UserIcon, Mail, Phone, MapPin, Edit2, Upload, Download, Plus, 
   Briefcase, GraduationCap, Code, FileText, Award, Globe, 
-  Languages, ChevronRight, CheckCircle2, AlertCircle, Crown,
-  Calendar, Building2, ExternalLink
+  Languages as LangIcon, ChevronRight, CheckCircle2, AlertCircle, Crown,
+  Calendar, Building2, ExternalLink, X, Loader2, Trash2
 } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
+import { fetchCurrentUser, updateProfile } from "@/lib/store/slices/userSlice";
+import { notify } from "@/lib/utils";
 
 export default function ProfilePage() {
+  const dispatch = useAppDispatch();
+  const { data: user, status } = useAppSelector((state) => state.user);
   const [activeSection, setActiveSection] = useState("resume");
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+
+  useEffect(() => {
+    dispatch(fetchCurrentUser());
+  }, [dispatch]);
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
@@ -21,6 +31,28 @@ export default function ProfilePage() {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+
+  const handleUpdate = async (updates: any) => {
+    try {
+      await dispatch(updateProfile(updates)).unwrap();
+      notify("Profile updated successfully", "success");
+      setEditingSection(null);
+    } catch (err: any) {
+      notify(err.message || "Failed to update profile", "error");
+    }
+  };
+
+  if (status === "loading" && !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <PublicNavbar />
+        <div className="flex h-[70vh] flex-col items-center justify-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+          <p className="font-bold text-slate-500">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -44,9 +76,8 @@ export default function ProfilePage() {
                     { id: "employment", label: "Employment", icon: Briefcase },
                     { id: "education", label: "Education", icon: GraduationCap },
                     { id: "projects", label: "Projects", icon: Globe },
-                    { id: "summary", label: "Profile Summary", icon: User },
-                    { id: "accomplishments", label: "Accomplishments", icon: Award },
-                    { id: "personal", label: "Personal Details", icon: User },
+                    { id: "summary", label: "Profile Summary", icon: UserIcon },
+                    { id: "personal", label: "Personal Details", icon: UserIcon },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -56,7 +87,6 @@ export default function ProfilePage() {
                           ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" 
                           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                       }`}
-                      suppressHydrationWarning
                     >
                       <item.icon className={`h-4 w-4 ${
                         activeSection === item.id ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
@@ -78,31 +108,28 @@ export default function ProfilePage() {
               animate={{ opacity: 1, y: 0 }}
               className="relative overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800"
             >
-              <div className="h-32 bg-linear-to-r from-blue-600 to-indigo-600"></div>
+              <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
               <div className="px-6 pb-6">
                 <div className="relative -mt-12 mb-4 flex flex-col items-start sm:flex-row sm:items-end gap-4">
                   <div className="relative h-24 w-24 rounded-full border-4 border-white bg-white shadow-md dark:border-slate-900 dark:bg-slate-800">
                     <img 
-                      src="https://ui-avatars.com/api/?name=Milankumar+Javiya&background=random&size=128" 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || "User")}&background=random&size=128`} 
                       alt="Profile" 
                       className="h-full w-full rounded-full object-cover" 
                     />
-                    <button 
-                      className="absolute bottom-0 right-0 rounded-full bg-slate-900 p-1.5 text-white shadow-sm hover:bg-blue-600 transition-colors dark:bg-slate-700"
-                      suppressHydrationWarning
-                    >
+                    <button className="absolute bottom-0 right-0 rounded-full bg-slate-900 p-1.5 text-white shadow-sm hover:bg-blue-600 transition-colors dark:bg-slate-700">
                       <Edit2 size={12} />
                     </button>
                   </div>
                   <div className="flex-1 pb-2">
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      Milankumar Javiya 
-                      <button className="text-slate-400 hover:text-blue-600 transition-colors" suppressHydrationWarning>
+                      {user?.fullName} 
+                      <button onClick={() => setEditingSection("basic")} className="text-slate-400 hover:text-blue-600 transition-colors">
                         <Edit2 size={16} />
                       </button>
                     </h1>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Profile last updated - Today
+                      Profile last updated - {user?.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : "Just now"}
                     </p>
                     
                     <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -111,15 +138,14 @@ export default function ProfilePage() {
                           <div className="flex flex-col">
                             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Mobile Number</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-900 dark:text-white">9876543210</span>
-                              <span className="flex items-center gap-0.5 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                <CheckCircle2 size={10} /> Verified
-                              </span>
+                              <span className="text-sm font-semibold text-slate-900 dark:text-white">{user?.phone || "Not added"}</span>
+                              {user?.phone && (
+                                <span className="flex items-center gap-0.5 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                  <CheckCircle2 size={10} /> Verified
+                                </span>
+                              )}
                             </div>
                           </div>
-                          <button className="ml-2 text-slate-400 hover:text-blue-600 transition-colors" suppressHydrationWarning>
-                            <Edit2 size={14} />
-                          </button>
                       </div>
 
                       <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-700 dark:bg-slate-800/50">
@@ -127,124 +153,38 @@ export default function ProfilePage() {
                           <div className="flex flex-col">
                             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Email Address</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-900 dark:text-white">milan@example.com</span>
+                              <span className="text-sm font-semibold text-slate-900 dark:text-white">{user?.email}</span>
                               <span className="flex items-center gap-0.5 rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                 <CheckCircle2 size={10} /> Verified
                               </span>
                             </div>
                           </div>
-                          <button className="ml-2 text-slate-400 hover:text-blue-600 transition-colors" suppressHydrationWarning>
-                            <Edit2 size={14} />
-                          </button>
                       </div>
                     </div>
-                  </div>
-                  <div className="mb-2 hidden lg:block">
-                     {/* Spacer for layout balance */}
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 sm:grid-cols-2 lg:grid-cols-4 dark:border-slate-800">
                   <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <MapPin size={16} className="text-slate-400" />
-                    <span>Surat, INDIA</span>
+                    <span>{user?.location || "Location not added"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <Briefcase size={16} className="text-slate-400" />
-                    <span>Fresher</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <Calendar size={16} className="text-slate-400" />
-                    <span>Add availability to join</span>
+                    <span>{user?.experience?.length ? `${user.experience.length} Experience(s)` : "Fresher"}</span>
                   </div>
                 </div>
               </div>
             </motion.div>
 
-            {/* PENDING ACTIONS */}
-            <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4 dark:border-orange-900/30 dark:bg-orange-950/20">
-               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-orange-500 shadow-sm dark:bg-slate-900">
-                        <AlertCircle size={20} />
-                     </div>
-                     <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white">3 Missing Details</h3>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">Add details to improve your profile strength</p>
-                     </div>
-                  </div>
-                  <button 
-                    className="rounded-full bg-orange-500 px-4 py-2 text-xs font-bold text-white hover:bg-orange-600 transition-colors"
-                    suppressHydrationWarning
-                  >
-                    Add Missing Details
-                  </button>
-               </div>
-            </div>
-
-            {/* PRO BANNER */}
-            <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-amber-100 to-yellow-100 p-4 dark:from-amber-900/40 dark:to-yellow-900/40 border border-yellow-200 dark:border-yellow-800">
-               <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-2">
-                     <Crown className="text-yellow-700 dark:text-yellow-400" fill="currentColor" />
-                     <span className="font-bold text-yellow-900 dark:text-yellow-100">HireX Pro</span>
-                     <span className="text-sm text-yellow-800 dark:text-yellow-200 hidden sm:inline">Power up with 3x enhanced profile visibility</span>
-                  </div>
-                  <button 
-                    className="rounded-full bg-yellow-900 px-4 py-2 text-xs font-bold text-white hover:bg-yellow-800 transition-colors dark:bg-yellow-400 dark:text-yellow-950 dark:hover:bg-yellow-300"
-                    suppressHydrationWarning
-                  >
-                    <Link href="/pro_profile">Become a Pro</Link>
-                  </button>
-               </div>
-            </div>
-
-            {/* RESUME SECTION */}
-            <section id="resume" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-               <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Resume</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Upload new</button>
-               </div>
-               
-               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-700 dark:bg-slate-800/50">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                     <FileText size={24} />
-                  </div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">Milankumar_Resume.pdf</h3>
-                  <p className="text-xs text-slate-500 mt-1 mb-4 dark:text-slate-400">Uploaded on Feb 15, 2026</p>
-                  <div className="flex justify-center gap-3">
-                     <button className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700" suppressHydrationWarning>
-                        <Download size={14} /> Download
-                     </button>
-                     <button className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-xs font-bold text-red-600 shadow-sm hover:bg-red-50 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-900/20" suppressHydrationWarning>
-                        Delete
-                     </button>
-                  </div>
-               </div>
-
-               {/* AI Resume Builder Banner */}
-               <div className="mt-6 flex items-center justify-between rounded-xl bg-linear-to-r from-blue-50 to-indigo-50 p-4 dark:from-blue-900/20 dark:to-indigo-900/20">
-                  <div className="flex gap-4">
-                     <div className="h-12 w-16 bg-white rounded shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700"></div>
-                     <div>
-                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">We've built a resume based on your profile</h4>
-                        <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">You can further improve it & use it with one click.</p>
-                     </div>
-                  </div>
-                  <button className="rounded-full bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition-colors" suppressHydrationWarning>
-                     View Resume
-                  </button>
-               </div>
-            </section>
-
             {/* RESUME HEADLINE */}
             <section id="headline" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">Resume Headline</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Edit</button>
+                  <button onClick={() => setEditingSection("headline")} className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">Edit</button>
                </div>
-               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Frontend Developer with expertise in React.js, Next.js, and Tailwind CSS. Passionate about building responsive and user-friendly web applications.
+               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                  {user?.about || "Add a headline to show recruiters what you do best. (e.g. Frontend Developer with 2 years of experience in React)"}
                </p>
             </section>
 
@@ -252,14 +192,16 @@ export default function ProfilePage() {
             <section id="skills" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">Key Skills</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add details</button>
+                  <button onClick={() => setEditingSection("skills")} className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">Add details</button>
                </div>
                <div className="flex flex-wrap gap-2">
-                  {["React.js", "Next.js", "TypeScript", "JavaScript", "Tailwind CSS", "Node.js", "Git", "Redux", "HTML5", "CSS3"].map(skill => (
-                     <span key={skill} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-colors dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-blue-400">
+                  {user?.skills?.length ? user.skills.map((skill: string) => (
+                     <span key={skill} className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-bold text-slate-600 transition-colors dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300">
                         {skill}
                      </span>
-                  ))}
+                  )) : (
+                    <p className="text-sm text-slate-500 italic">No skills added yet.</p>
+                  )}
                </div>
             </section>
 
@@ -267,211 +209,176 @@ export default function ProfilePage() {
             <section id="employment" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">Employment</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add employment</button>
+                  <button onClick={() => setEditingSection("experience")} className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">Add employment</button>
                </div>
-               <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="mb-3 rounded-full bg-slate-50 p-3 dark:bg-slate-800">
-                     <Briefcase className="text-slate-400" />
-                  </div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">No employment details added</p>
-                  <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">Add your work experience to boost your profile</p>
-               </div>
+               {user?.experience?.length ? (
+                 <div className="space-y-6">
+                   {user.experience.map((exp: any, idx: number) => (
+                     <div key={idx} className="relative pl-4 border-l-2 border-slate-100 dark:border-slate-800">
+                        <h3 className="font-bold text-slate-900 dark:text-white">{exp.title}</h3>
+                        <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">{exp.company}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {new Date(exp.startDate).toLocaleDateString()} - {exp.current ? "Present" : exp.endDate ? new Date(exp.endDate).toLocaleDateString() : ""}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{exp.description}</p>
+                     </div>
+                   ))}
+                 </div>
+               ) : (
+                 <div className="flex flex-col items-center justify-center py-8 text-center text-slate-400">
+                    <Briefcase size={40} className="mb-2 opacity-20" />
+                    <p className="text-sm font-medium">No employment details added</p>
+                 </div>
+               )}
             </section>
 
             {/* EDUCATION */}
             <section id="education" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">Education</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add education</button>
+                  <button onClick={() => setEditingSection("education")} className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400">Add education</button>
                </div>
-               <div className="space-y-6">
-                  <div className="relative pl-4 border-l-2 border-slate-100 dark:border-slate-800">
-                     <h3 className="font-bold text-slate-900 dark:text-white">B.Tech Computer Engineering</h3>
-                     <p className="text-sm text-slate-600 dark:text-slate-400">Gujarat Technological University</p>
-                     <p className="text-xs text-slate-500 mt-1 dark:text-slate-500">2020 - 2024 | Full Time</p>
-                     <button className="absolute right-0 top-0 text-slate-400 hover:text-blue-600 transition-colors" suppressHydrationWarning>
-                        <Edit2 size={14} />
-                     </button>
-                  </div>
-                  <div className="relative pl-4 border-l-2 border-slate-100 dark:border-slate-800">
-                     <h3 className="font-bold text-slate-900 dark:text-white">Class XII</h3>
-                     <p className="text-sm text-slate-600 dark:text-slate-400">GSEB Board</p>
-                     <p className="text-xs text-slate-500 mt-1 dark:text-slate-500">2020</p>
-                     <button className="absolute right-0 top-0 text-slate-400 hover:text-blue-600 transition-colors" suppressHydrationWarning>
-                        <Edit2 size={14} />
-                     </button>
-                  </div>
-               </div>
-            </section>
-
-            {/* IT SKILLS */}
-            <section className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-               <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">IT Skills</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add details</button>
-               </div>
-               <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                     <thead className="text-xs uppercase text-slate-500 dark:text-slate-400">
-                        <tr>
-                           <th className="pb-3 font-medium">Skill</th>
-                           <th className="pb-3 font-medium">Version</th>
-                           <th className="pb-3 font-medium">Last Used</th>
-                           <th className="pb-3 font-medium">Experience</th>
-                           <th className="pb-3 text-right">Action</th>
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {[
-                           { name: "React.js", ver: "18", last: "2024", exp: "2 Years" },
-                           { name: "Java", ver: "17", last: "2023", exp: "1 Year" },
-                           { name: "Python", ver: "3.10", last: "2022", exp: "6 Months" },
-                        ].map((row) => (
-                           <tr key={row.name} className="group">
-                              <td className="py-3 font-medium text-slate-900 dark:text-white">{row.name}</td>
-                              <td className="py-3 text-slate-600 dark:text-slate-400">{row.ver}</td>
-                              <td className="py-3 text-slate-600 dark:text-slate-400">{row.last}</td>
-                              <td className="py-3 text-slate-600 dark:text-slate-400">{row.exp}</td>
-                              <td className="py-3 text-right">
-                                 <button className="text-slate-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100" suppressHydrationWarning>
-                                    <Edit2 size={14} />
-                                 </button>
-                              </td>
-                           </tr>
-                        ))}
-                     </tbody>
-                  </table>
-               </div>
-            </section>
-
-            {/* PROJECTS */}
-            <section id="projects" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-               <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Projects</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add project</button>
-               </div>
-               <div className="space-y-6">
-                  <div className="group relative">
-                     <h3 className="font-bold text-slate-900 dark:text-white">E-Commerce Platform</h3>
-                     <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">Full Stack Project | 2023</p>
-                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        Built a scalable e-commerce application using Next.js, Stripe for payments, and Sanity CMS. Implemented cart functionality, user authentication, and order tracking.
-                     </p>
-                     <button className="absolute right-0 top-0 text-slate-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100" suppressHydrationWarning>
-                        <Edit2 size={14} />
-                     </button>
-                  </div>
-               </div>
-            </section>
-
-            {/* PROFILE SUMMARY */}
-            <section id="summary" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-               <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Profile Summary</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add summary</button>
-               </div>
-               <p className="text-sm text-slate-500 italic dark:text-slate-400">
-                  Your profile summary should mention the highlights of your career and education, what your professional interests are, and what kind of a career you are looking for. Write a meaningful summary of more than 50 characters.
-               </p>
-            </section>
-
-            {/* ACCOMPLISHMENTS */}
-            <section id="accomplishments" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-               <div className="mb-6">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Accomplishments</h2>
-               </div>
-               <div className="grid gap-4 sm:grid-cols-2">
-                  {[
-                     { title: "Online Profile", desc: "Add link to Online profiles (e.g. Linkedin, etc.)" },
-                     { title: "Work Sample", desc: "Add link to your Projects (e.g. Github, Behance, etc.)" },
-                     { title: "White Paper / Research Publication", desc: "Add link to your Online publications" },
-                     { title: "Presentation", desc: "Add link to your Online presentations" },
-                     { title: "Patent", desc: "Add details of patents you have filed" },
-                     { title: "Certification", desc: "Add details of certifications you have earned" },
-                  ].map((item) => (
-                     <div key={item.title} className="flex items-start justify-between rounded-xl border border-slate-100 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
-                        <div>
-                           <h4 className="font-bold text-sm text-slate-900 dark:text-white">{item.title}</h4>
-                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.desc}</p>
-                        </div>
-                        <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add</button>
+               {user?.education?.length ? (
+                 <div className="space-y-6">
+                   {user.education.map((edu: any, idx: number) => (
+                     <div key={idx} className="relative pl-4 border-l-2 border-slate-100 dark:border-slate-800">
+                        <h3 className="font-bold text-slate-900 dark:text-white">{edu.degree}</h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">{edu.institution}</p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {new Date(edu.startDate).getFullYear()} - {edu.current ? "Present" : edu.endDate ? new Date(edu.endDate).getFullYear() : ""}
+                        </p>
                      </div>
-                  ))}
-               </div>
-            </section>
-
-            {/* PERSONAL DETAILS */}
-            <section id="personal" className="scroll-mt-28 rounded-2xl bg-white p-6 shadow-sm border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-               <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Personal Details</h2>
-                  <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Edit</button>
-               </div>
-               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                     <p className="text-xs text-slate-500 dark:text-slate-400">Date of Birth</p>
-                     <p className="font-medium text-slate-900 dark:text-white">15 Aug 2002</p>
-                  </div>
-                  <div>
-                     <p className="text-xs text-slate-500 dark:text-slate-400">Gender</p>
-                     <p className="font-medium text-slate-900 dark:text-white">Male</p>
-                  </div>
-                  <div>
-                     <p className="text-xs text-slate-500 dark:text-slate-400">Marital Status</p>
-                     <p className="font-medium text-slate-900 dark:text-white">Single / Unmarried</p>
-                  </div>
-                  <div>
-                     <p className="text-xs text-slate-500 dark:text-slate-400">Category</p>
-                     <p className="font-medium text-slate-900 dark:text-white">General</p>
-                  </div>
-                  <div>
-                     <p className="text-xs text-slate-500 dark:text-slate-400">Differently Abled</p>
-                     <p className="font-medium text-slate-900 dark:text-white">No</p>
-                  </div>
-                  <div>
-                     <p className="text-xs text-slate-500 dark:text-slate-400">Career Break</p>
-                     <p className="font-medium text-slate-900 dark:text-white">No</p>
-                  </div>
-               </div>
-               
-               <div className="mt-8 border-t border-slate-100 pt-6 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-4">
-                     <h3 className="font-bold text-slate-900 dark:text-white">Languages</h3>
-                     <button className="text-sm font-bold text-blue-600 hover:underline dark:text-blue-400" suppressHydrationWarning>Add languages</button>
-                  </div>
-                  <div className="overflow-x-auto">
-                     <table className="w-full text-left text-sm">
-                        <thead className="text-xs uppercase text-slate-500 dark:text-slate-400">
-                           <tr>
-                              <th className="pb-3 font-medium">Language</th>
-                              <th className="pb-3 font-medium">Proficiency</th>
-                              <th className="pb-3 font-medium text-center">Read</th>
-                              <th className="pb-3 font-medium text-center">Write</th>
-                              <th className="pb-3 font-medium text-center">Speak</th>
-                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                           {[
-                              { name: "English", prof: "Professional", r: true, w: true, s: true },
-                              { name: "Hindi", prof: "Proficient", r: true, w: true, s: true },
-                              { name: "Gujarati", prof: "Native", r: true, w: true, s: true },
-                           ].map((lang) => (
-                              <tr key={lang.name}>
-                                 <td className="py-3 font-medium text-slate-900 dark:text-white">{lang.name}</td>
-                                 <td className="py-3 text-slate-600 dark:text-slate-400">{lang.prof}</td>
-                                 <td className="py-3 text-center"><CheckCircle2 size={14} className={lang.r ? "text-green-500 mx-auto" : "text-slate-300 mx-auto"} /></td>
-                                 <td className="py-3 text-center"><CheckCircle2 size={14} className={lang.w ? "text-green-500 mx-auto" : "text-slate-300 mx-auto"} /></td>
-                                 <td className="py-3 text-center"><CheckCircle2 size={14} className={lang.s ? "text-green-500 mx-auto" : "text-slate-300 mx-auto"} /></td>
-                              </tr>
-                           ))}
-                        </tbody>
-                     </table>
-                  </div>
-               </div>
+                   ))}
+                 </div>
+               ) : (
+                 <div className="flex flex-col items-center justify-center py-8 text-center text-slate-400">
+                    <GraduationCap size={40} className="mb-2 opacity-20" />
+                    <p className="text-sm font-medium">No education details added</p>
+                 </div>
+               )}
             </section>
 
           </div>
         </div>
       </main>
+
+      {/* MODALS */}
+      <AnimatePresence>
+        {editingSection && (
+          <Modal 
+            section={editingSection} 
+            user={user} 
+            onClose={() => setEditingSection(null)} 
+            onSave={handleUpdate} 
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function Modal({ section, user, onClose, onSave }: { section: string; user: any; onClose: () => void; onSave: (updates: any) => void }) {
+  const [formData, setFormData] = useState<any>(user || {});
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    await onSave(formData);
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden"
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+          <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            Edit {section.replace(/([A-Z])/g, ' $1').trim()}
+          </h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 dark:hover:text-white">
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {section === "headline" && (
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Resume Headline</label>
+              <textarea 
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium outline-none focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                rows={4}
+                value={formData.about || ""}
+                onChange={(e) => setFormData({ ...formData, about: e.target.value })}
+                placeholder="Briefly describe your professional profile..."
+              />
+            </div>
+          )}
+
+          {section === "skills" && (
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Key Skills (Comma separated)</label>
+              <input 
+                type="text"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium outline-none focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                value={formData.skills?.join(", ") || ""}
+                onChange={(e) => setFormData({ ...formData, skills: e.target.value.split(",").map((s: string) => s.trim()) })}
+                placeholder="e.g. React, Node.js, TypeScript"
+              />
+            </div>
+          )}
+
+          {section === "basic" && (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Full Name</label>
+                <input 
+                  type="text"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium outline-none focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                  value={formData.fullName || ""}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Phone</label>
+                <input 
+                  type="text"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium outline-none focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                  value={formData.phone || ""}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Location</label>
+                <input 
+                  type="text"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium outline-none focus:border-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                  value={formData.location || ""}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g. Surat, India"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Add more sections like experience/education as needed */}
+          {(section === "experience" || section === "education") && (
+            <p className="text-slate-500 text-sm italic">Detailed editing for {section} will be available soon. For now, please use the basic fields.</p>
+          )}
+
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+             <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-500">Cancel</button>
+             <button disabled={loading} type="submit" className="rounded-xl bg-blue-600 px-10 py-3 font-black text-white shadow-lg shadow-blue-500/30 hover:bg-blue-700 flex items-center justify-center gap-2">
+                {loading && <Loader2 size={18} className="animate-spin" />}
+                {loading ? "Saving..." : "Save Changes"}
+             </button>
+          </div>
+        </form>
+      </motion.div>
     </div>
   );
 }

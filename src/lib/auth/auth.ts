@@ -1,8 +1,14 @@
-// cspell:ignore NEXTAUTH
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { connectToDatabase } from "@/lib/db/db";
+import { User } from "@/lib/models/User";
+
+const useSecureCookies = process.env.NODE_ENV === "production";
+const cookiePrefix = process.env.APP_TYPE === "employer" ? "__employer" : 
+                     process.env.APP_TYPE === "seeker" ? "__seeker" : 
+                     "";
 
 export const {
   handlers: { GET, POST },
@@ -10,9 +16,19 @@ export const {
   signOut,
   auth,
 } = NextAuth({
+  cookies: cookiePrefix ? {
+    sessionToken: {
+      name: `${useSecureCookies ? "__Secure-" : ""}${cookiePrefix}.next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
+      },
+    },
+  } : undefined,
   providers: [
     Google({
-      // Uses the keys already defined in your .env
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
@@ -33,35 +49,32 @@ export const {
         }
 
         try {
-          const res = await fetch("http://localhost:5000/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-              role: credentials.role
-            })
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            throw new Error(data.message || "Invalid credentials");
+          await connectToDatabase();
+          
+          const user = await User.findOne({ email: credentials.email }).select("+password");
+          
+          if (!user) {
+            throw new Error("Invalid credentials");
           }
 
-          if (data.user && data.token) {
-            // Return user object along with the token attached so NextAuth can store it
-            return {
-              id: data.user._id,
-              name: data.user.fullName,
-              email: data.user.email,
-              role: data.user.role,
-              accessToken: data.token
-            };
+          const isValid = await user.comparePassword(credentials.password as string);
+          
+          if (!isValid) {
+            throw new Error("Invalid credentials");
           }
-          return null;
+
+          if (credentials.role && user.role !== credentials.role) {
+            throw new Error(`Please log in as a ${credentials.role}`);
+          }
+
+          return {
+            id: user._id.toString(),
+            name: user.fullName,
+            email: user.email,
+            role: user.role,
+            accessToken: "local-jwt-token" 
+          };
         } catch (error: any) {
-          // Pass the exact string phrase through so that our frontend error mapper can display it
           throw new Error(error.message || "Email or password incorrect. Please try again.");
         }
       }
@@ -75,11 +88,11 @@ export const {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.accessToken = (user as any).accessToken;
-        token.role = (user as any).role;
-        token.id = (user as any).id;
+        token.accessToken = (user as any).accessToken || account?.access_token || "oauth-token";
+        token.role = (user as any).role || "candidate";
+        token.id = (user as any).id || user.id;
       }
       return token;
     },

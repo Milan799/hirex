@@ -57,9 +57,9 @@ export function Footer() {
               For Recruiters
             </h3>
             <ul className="space-y-2.5 text-sm text-slate-600 dark:text-slate-400">
-              <li><FooterLink href="/employer/products">Post a Job</FooterLink></li>
-              <li><FooterLink href="/employer/search">Search Resumes</FooterLink></li>
-              <li><FooterLink href="/employer/hiring-solutions">Hiring Solutions</FooterLink></li>
+              <li><FooterLink href="/employer/jobs/new">Post a Job</FooterLink></li>
+              <li><FooterLink href="/employer/resdex">Search Resumes</FooterLink></li>
+              <li><FooterLink href="/employer/dashboard">Hiring Solutions</FooterLink></li>
               <li><FooterLink href="/auth/login">Employer Login</FooterLink></li>
             </ul>
           </div>

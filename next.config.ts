@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
+const isEmployer = process.env.APP_TYPE === "employer";
+
 const nextConfig: NextConfig = {
+  distDir: isEmployer ? ".next-employer" : ".next",
   images: {
     remotePatterns: [
       {

@@ -175,7 +175,7 @@ export default function ProProfilePage() {
 
         {/* FEATURES GRID 1: JOB SEARCH */}
         <section id="benefits" className="bg-slate-50 py-20 relative overflow-hidden scroll-mt-20">
-           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+           <div className="absolute top-0 left-0 w-full h-full bg-noise opacity-20"></div>
            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
               <div className="mb-16 text-center">
                  <span className="text-amber-600 font-bold text-sm tracking-wider uppercase mb-2 block">Smart Automation</span>
@@ -247,7 +247,7 @@ export default function ProProfilePage() {
 
         {/* TESTIMONIALS */}
         <section className="bg-slate-900 py-20 text-white relative overflow-hidden">
-           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
+           <div className="absolute inset-0 bg-noise opacity-10"></div>
            <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8 relative z-10">
               <h2 className="mb-12 text-3xl font-bold">Join top professionals who have <br /> upgraded to <span className="text-amber-400">HireX Pro!</span></h2>
               

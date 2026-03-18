@@ -132,16 +132,16 @@ const recruiterNavItems = [
     ]
   },
   {
-    href: "/employer/candidates",
+    href: "/employer/resdex",
     label: "Candidates",
     columns: [
       {
         title: "Sourcing",
         items: [
-          { label: "Search Resumes", href: "/employer/candidates?tab=search" },
-          { label: "Saved Candidates", href: "/employer/candidates?tab=saved" },
-          { label: "AI Matching", href: "/employer/candidates?tab=ai" },
-          { label: "Campus Hiring", href: "/employer/candidates?tab=campus" },
+          { label: "Search Resumes", href: "/employer/resdex" },
+          { label: "Saved Candidates", href: "/employer/resdex" },
+          { label: "AI Matching", href: "/employer/resdex" },
+          { label: "Campus Hiring", href: "/employer/resdex" },
         ]
       }
     ]

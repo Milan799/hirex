@@ -152,7 +152,7 @@ export default function InterviewProfilesPage() {
       
       {/* Header / Search Section */}
       <div className="relative overflow-hidden bg-slate-900 pb-16 pt-24 text-white">
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+         <div className="absolute inset-0 bg-noise opacity-20"></div>
          <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-600/30 blur-3xl"></div>
          <div className="absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-purple-600/30 blur-3xl"></div>
 

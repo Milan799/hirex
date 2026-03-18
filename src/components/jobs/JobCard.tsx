@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { FaMapMarkerAlt, FaBriefcase, FaRupeeSign, FaStar, FaRegBookmark, FaHistory } from "react-icons/fa";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface JobCardProps {
   title: string;
@@ -39,6 +41,7 @@ export function JobCard({
 }: JobCardProps) {
   const [imgError, setImgError] = useState(false);
   const [imgSrc, setImgSrc] = useState(logo);
+  const router = useRouter();
 
   return (
     <motion.div
@@ -47,7 +50,8 @@ export function JobCard({
       viewport={{ once: true }}
       whileHover={{ y: -4, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
       transition={{ duration: 0.2 }}
-      className="group relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900"
+      onClick={() => id && router.push(`/jobs/${id}`)}
+      className="group relative cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="flex items-start justify-between">
         <div className="flex gap-4">
@@ -80,7 +84,10 @@ export function JobCard({
           </div>
         </div>
 
-        <button className="text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400">
+        <button 
+          onClick={(e) => { e.stopPropagation(); /* Bookmark logic */ }}
+          className="text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400"
+        >
           <FaRegBookmark className="text-lg" />
         </button>
       </div>
@@ -140,3 +147,5 @@ export function JobCard({
     </motion.div>
   );
 }
+
+

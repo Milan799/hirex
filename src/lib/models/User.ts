@@ -34,11 +34,31 @@ export interface IUser extends Document {
     endDate?: Date;
     current: boolean;
   }[];
+  projects?: {
+    title: string;
+    description: string;
+    link?: string;
+    year?: string;
+  }[];
+  languages?: {
+    name: string;
+    proficiency: string;
+    read: boolean;
+    write: boolean;
+    speak: boolean;
+  }[];
+  itSkills?: {
+    name: string;
+    version?: string;
+    lastUsed?: string;
+    experience?: string;
+  }[];
   resumeUrl?: string;
 
   // For Recruiters
   companyName?: string;
   companyWebsite?: string;
+  bio?: string;
 
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -103,14 +123,41 @@ const UserSchema = new Schema<IUser, UserModel>(
         current: { type: Boolean, default: false },
       },
     ],
+    projects: [
+      {
+        title: String,
+        description: String,
+        link: String,
+        year: String,
+      }
+    ],
+    languages: [
+      {
+        name: String,
+        proficiency: String,
+        read: { type: Boolean, default: true },
+        write: { type: Boolean, default: true },
+        speak: { type: Boolean, default: true },
+      }
+    ],
+    itSkills: [
+      {
+        name: String,
+        version: String,
+        lastUsed: String,
+        experience: String,
+      }
+    ],
     resumeUrl: String,
     companyName: String,
     companyWebsite: String,
+    bio: String,
   },
   {
     timestamps: true,
   }
 );
+
 
 UserSchema.methods.comparePassword = async function comparePassword(
   this: IUser,
