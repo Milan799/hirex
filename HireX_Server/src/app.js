@@ -11,7 +11,16 @@ const app = express();
 connectDB();
 
 app.use(express.json());
-app.use(cors({ origin: ["http://localhost:3000", "http://127.0.0.1:3001", "http://localhost:3002"], credentials: true }));
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3001",
+  "http://localhost:3002",
+];
+
+if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
+if (process.env.ADMIN_URL) allowedOrigins.push(process.env.ADMIN_URL);
+
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
