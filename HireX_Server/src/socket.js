@@ -4,7 +4,7 @@ const Message = require("./models/Messages.model");
 const initSocket = (server) => {
     const io = new Server(server, {
         cors: {
-            origin: ["http://localhost:3000", "http://localhost:3001"],
+            origin: ["http://localhost:3000", "http://127.0.0.1:3001"],
             methods: ["GET", "POST"]
         }
     });

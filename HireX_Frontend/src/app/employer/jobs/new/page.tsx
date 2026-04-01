@@ -88,7 +88,7 @@ export default function PostJob() {
               </div>
               <div>
                 <label className={labelClass}><Building2 size={13} className="text-violet-500 dark:text-violet-400" />Company Name</label>
-                <input required name="company" value={form.company} onChange={hc} placeholder="e.g. TechCorp" className={inputClass} />
+                <input required name="company" value={form.company} onChange={hc} placeholder="e.g. TechCorp" className={inputClass} disabled />
               </div>
             </div>
 
@@ -121,7 +121,7 @@ export default function PostJob() {
               <div>
                 <label className={labelClass}><Briefcase size={13} className="text-violet-500 dark:text-violet-400" />Experience Level</label>
                 <select name="experienceLevel" value={form.experienceLevel} onChange={hc} className={inputClass}>
-                  {["1-3 Years", "3-5 Years", "5-10 Years", "10+ Years"].map(o =>
+                  {["Fresher", "1-3 Years", "3-5 Years", "5-10 Years", "10+ Years"].map(o =>
                     <option key={o} value={o} className="bg-white dark:bg-[#18181f]">{o}</option>
                   )}
                 </select>

@@ -16,12 +16,12 @@ const navItems = [
       {
         title: "Popular Categories",
         items: [
-          { label: "IT Jobs", href: "/jobs?category=it" },
-          { label: "Sales Jobs", href: "/jobs?category=sales" },
-          { label: "Marketing Jobs", href: "/jobs?category=marketing" },
-          { label: "Data Science Jobs", href: "/jobs?category=data-science" },
-          { label: "HR Jobs", href: "/jobs?category=hr" },
-          { label: "Engineering Jobs", href: "/jobs?category=engineering" },
+          { label: "IT Jobs", href: "/jobs?industry=it jobs" },
+          { label: "Sales Jobs", href: "/jobs?industry=sales" },
+          { label: "Marketing Jobs", href: "/jobs?industry=marketing" },
+          { label: "Data Science Jobs", href: "/jobs?industry=data-science" },
+          { label: "HR Jobs", href: "/jobs?industry=hr" },
+          { label: "Engineering Jobs", href: "/jobs?industry=engineering" },
         ]
       },
       {
@@ -365,7 +365,7 @@ export function PublicNavbar({ showSearch = false }: { showSearch?: boolean }) {
         >
           <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex items-center gap-8">
-              <Link href={homeUrl} className="group flex items-center gap-2" onClick={close}>
+              <Link href="/" className="group flex items-center gap-2" onClick={close}>
                 <span className="flex flex-col leading-tight">
                   <motion.span
                     whileHover={{ scale: 1.03 }}

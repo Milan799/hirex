@@ -116,7 +116,7 @@ export default function Home() {
 
 
           <div className="mx-auto max-w-5xl text-center relative z-10">
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
@@ -127,7 +127,7 @@ export default function Home() {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
               </span>
               Over 5,000 top companies hiring now
-            </motion.div>
+            </motion.div> */}
 
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -158,25 +158,19 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-10 flex flex-wrap justify-center gap-8 sm:gap-16 border-y border-slate-200/60 dark:border-slate-800/60 py-6"
+              className="mt-10 flex flex-wrap justify-center gap-16 sm:gap-32 border-y border-slate-200/60 dark:border-slate-800/60 py-6"
             >
               <div className="text-center">
                 <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                  <AnimatedNumber value={data?.stats?.totalJobs ? data.stats.totalJobs : 540200} />+
+                  <AnimatedNumber value={data?.stats?.totalJobs || 0} />+
                 </p>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">Active Positions</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                  <AnimatedNumber value={data?.stats?.totalRecruiters ? 10000 + data.stats.totalRecruiters : 12400} />+
+                  <AnimatedNumber value={data?.stats?.totalRecruiters || 0} />+
                 </p>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">Verified Recruiters</p>
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                  <AnimatedNumber value={data?.stats?.totalCandidates ? 200000 + data.stats.totalCandidates : 240000} />+
-                </p>
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">Talented Candidates</p>
               </div>
             </motion.div>
 
@@ -202,15 +196,9 @@ export default function Home() {
 
             {/* Sliding Track 1 */}
             <div className="flex animate-marquee whitespace-nowrap items-center">
-              {/* Map backend companies or fallbacks, repeating them to ensure seamless loops */}
               {[...(data?.topCompanies?.length > 0 ? data.topCompanies : fallbackCompanies), ...(data?.topCompanies?.length > 0 ? data.topCompanies : fallbackCompanies)].map((company: any, index: number) => (
                 <div key={`c-${index}`} className="flex items-center mx-10 min-w-[max-content] grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100 cursor-pointer">
-                  <img
-                    src={company.logo || `https://www.google.com/s2/favicons?domain=${company.companyWebsite || 'google.com'}&sz=128`}
-                    alt={company.companyName || company.name}
-                    className="h-10 w-auto mr-3 object-contain"
-                    onError={(e) => { e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/2942/2942821.png" }}
-                  />
+                  <CompanyAvatar name={company.companyName || company.name} logo={company.logo} className="h-10 w-10 shrink-0 mr-3 rounded-lg object-contain text-sm" />
                   <span className="font-bold text-xl text-slate-800 dark:text-slate-200">{company.companyName || company.name}</span>
                 </div>
               ))}
@@ -219,12 +207,7 @@ export default function Home() {
             <div className="flex animate-marquee whitespace-nowrap items-center" aria-hidden="true">
               {[...(data?.topCompanies?.length > 0 ? data.topCompanies : fallbackCompanies), ...(data?.topCompanies?.length > 0 ? data.topCompanies : fallbackCompanies)].map((company: any, index: number) => (
                 <div key={`d-${index}`} className="flex items-center mx-10 min-w-[max-content] grayscale opacity-60 transition-all hover:grayscale-0 hover:opacity-100 cursor-pointer">
-                  <img
-                    src={company.logo || `https://www.google.com/s2/favicons?domain=${company.companyWebsite || 'google.com'}&sz=128`}
-                    alt={company.companyName || company.name}
-                    className="h-10 w-auto mr-3 object-contain"
-                    onError={(e) => { e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/2942/2942821.png" }}
-                  />
+                  <CompanyAvatar name={company.companyName || company.name} logo={company.logo} className="h-10 w-10 shrink-0 mr-3 rounded-lg object-contain text-sm" />
                   <span className="font-bold text-xl text-slate-800 dark:text-slate-200">{company.companyName || company.name}</span>
                 </div>
               ))}
@@ -280,7 +263,7 @@ export default function Home() {
         </section>
 
         {/* CATEGORIES - Redesigned */}
-        <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 mt-10">
+        {/* <section className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 mt-10">
           <h2 className="mb-8 text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">Explore premium categories</h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <CategoryCard
@@ -308,7 +291,7 @@ export default function Home() {
               items={["Account Executive", "Financial Analyst", "Operations", "Sales Ops"]}
             />
           </div>
-        </section>
+        </section> */}
 
         {/* CALL TO ACTION / PROMO */}
         <section className="mx-auto mt-16 max-w-5xl px-4 sm:px-6 w-full">
@@ -343,6 +326,28 @@ export default function Home() {
 }
 
 // --- Data & Subcomponents ---
+
+function CompanyAvatar({ name, logo, className }: { name: string; logo?: string; className?: string }) {
+  const [imgError, setImgError] = useState(false);
+  const initials = (name || "CO").substring(0, 2).toUpperCase();
+
+  if (logo && !imgError) {
+    return (
+      <img
+        src={logo}
+        alt={name}
+        className={className || "h-full w-full object-contain"}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div className={`flex items-center justify-center bg-linear-to-br from-blue-100 to-indigo-100 text-blue-700 font-extrabold shadow-sm border border-blue-200/50 dark:from-blue-900/40 dark:to-indigo-900/40 dark:text-blue-400 dark:border-blue-800/50 ${className || 'h-full w-full rounded-md text-lg'}`}>
+      {initials}
+    </div>
+  );
+}
 
 const fallbackCompanies = [
   { name: "Google", logo: "https://www.google.com/s2/favicons?domain=google.com&sz=128" },
@@ -470,13 +475,8 @@ const JobHighlight = ({ title, company, location, type, logo }: JobHighlightProp
   return (
     <div className="group relative flex flex-col justify-between gap-6 rounded-[1.5rem] border border-slate-200/60 bg-white/40 backdrop-blur-xl p-6 shadow-sm transition-all hover:-translate-y-1.5 hover:border-blue-300 hover:bg-white/80 hover:shadow-2xl hover:shadow-blue-500/10 dark:border-slate-800/60 dark:bg-slate-900/40 dark:hover:border-slate-700 dark:hover:bg-slate-900/80">
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 p-2 shadow-inner border border-slate-200/50 dark:bg-slate-800 dark:border-slate-700">
-          <img
-            src={logo || `https://www.google.com/s2/favicons?domain=${safeCompany.replace(/\s+/g, '').toLowerCase()}.com&sz=128`}
-            alt={safeCompany}
-            className="h-full w-full object-contain"
-            onError={(e) => { e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/2942/2942821.png" }}
-          />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 p-1 shadow-inner border border-slate-200/50 dark:bg-slate-800 dark:border-slate-700 overflow-hidden text-sm">
+          <CompanyAvatar name={safeCompany} logo={logo} className="h-full w-full object-contain rounded-lg" />
         </div>
         <div>
           <h3 className="font-bold text-lg text-slate-900 dark:text-white leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{title}</h3>

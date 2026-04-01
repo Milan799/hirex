@@ -179,16 +179,7 @@ function DashboardContent() {
             </div>
           </div>
 
-          <div className="shrink-0 w-full sm:w-auto">
-            <a
-              href={process.env.NEXT_PUBLIC_SEEKER_URL || "http://localhost:3000"}
-              className="group relative inline-flex w-full sm:w-auto items-center justify-center overflow-hidden rounded-[1.25rem] bg-white px-8 py-4 font-bold text-slate-900 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-white/20 active:scale-95"
-            >
-              <span className="relative z-10 flex items-center gap-2 text-sm sm:text-base">
-                Candidate Portal <ChevronRight size={18} className="transition-transform group-hover:translate-x-1" />
-              </span>
-            </a>
-          </div>
+
         </div>
       </div>
 

@@ -33,7 +33,8 @@ const getHomeData = async (req, res) => {
 
         return res.status(200).json({
             stats: {
-                totalJobs: totalJobs > 500000 ? totalJobs : 500000 + totalJobs, // Simulating 500k+ if actual is low
+                totalJobs: totalJobs < 500000 ? totalJobs : 500000 + totalJobs, // Simulating 500k+ if actual is low
+                
                 totalRecruiters,
                 totalCandidates
             },

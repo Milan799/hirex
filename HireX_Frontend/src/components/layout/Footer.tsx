@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from "react-icons/fa";
+import { useAppSelector } from "@/lib/store/hooks";
 
 export function Footer() {
+  const { data: userResponse } = useAppSelector((state) => state.user);
+
+  const user = userResponse?.user || userResponse;
+  const isRecruiter = user?.role === "recruiter";
   return (
     <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -46,23 +51,25 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm text-slate-600 dark:text-slate-400">
               <li><FooterLink href="/jobs">Browse Jobs</FooterLink></li>
               <li><FooterLink href="/companies">Browse Companies</FooterLink></li>
-              <li><FooterLink href="/services">Resume Services</FooterLink></li>
-              <li><FooterLink href="/auth/login">Candidate Login</FooterLink></li>
+              {/* <li><FooterLink href="/services">Resume Services</FooterLink></li> */}
+              {/* <li><FooterLink href="/auth/login">Candidate Login</FooterLink></li> */}
             </ul>
           </div>
 
           {/* Links Column 3 */}
-          <div>
-            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              For Recruiters
-            </h3>
-            <ul className="space-y-2.5 text-sm text-slate-600 dark:text-slate-400">
-              <li><FooterLink href="/employer/jobs/new">Post a Job</FooterLink></li>
-              <li><FooterLink href="/employer/resdex">Search Resumes</FooterLink></li>
-              <li><FooterLink href="/employer/dashboard">Hiring Solutions</FooterLink></li>
-              <li><FooterLink href="/auth/login">Employer Login</FooterLink></li>
-            </ul>
-          </div>
+          {isRecruiter && (
+  <div>
+    <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
+      For Recruiters
+    </h3>
+    <ul className="space-y-2.5 text-sm text-slate-600 dark:text-slate-400">
+      <li><FooterLink href="/employer/jobs/new">Post a Job</FooterLink></li>
+      <li><FooterLink href="/employer/resdex">Search Resumes</FooterLink></li>
+      <li><FooterLink href="/employer/dashboard">Hiring Solutions</FooterLink></li>
+      <li><FooterLink href="/auth/login">Employer Login</FooterLink></li>
+    </ul>
+  </div>
+)}
         </div>
 
         <div className="mt-12 border-t border-slate-200 pt-8 dark:border-slate-800">

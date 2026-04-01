@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Building2, Mail, Phone, MapPin, Globe, Save, Loader2, Pencil, X } from "lucide-react";
 
 const inputClass = "w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder-slate-400 focus:border-violet-500 hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-slate-600 dark:focus:border-violet-500/60 dark:hover:bg-white/8";
+const inputClasslong = "w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-900 outline-none placeholder-slate-400 focus:border-violet-500 hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-slate-600 dark:focus:border-violet-500/60 dark:hover:bg-white/8";
 const labelClass = "block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500";
 
 export default function EmployerProfile() {
@@ -17,7 +18,7 @@ export default function EmployerProfile() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState({ companyName: "", fullName: "", phone: "", city: "", country: "", website: "", bio: "" });
+  const [form, setForm] = useState({ companyName: "", fullName: "", phone: "", city: "", country: "", industry: "", website: "", bio: "" });
 
   useEffect(() => {
     if (user) {
@@ -28,14 +29,20 @@ export default function EmployerProfile() {
         phone: user.phone || "",
         city: user.location?.city || "",
         country: user.location?.country || "",
+        industry: company.industry || "",
         website: company.website || user.website || "",
         bio: company.description || user.bio || "",
       });
     }
   }, [user]);
 
-  const hc = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const hc = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleCancel = () => {
     setEditing(false);
@@ -47,6 +54,7 @@ export default function EmployerProfile() {
         phone: user.phone || "",
         city: user.location?.city || "",
         country: user.location?.country || "",
+        industry: company.industry || "",
         website: company.website || user.website || "",
         bio: company.description || user.bio || "",
       });
@@ -57,12 +65,13 @@ export default function EmployerProfile() {
     e.preventDefault();
     setSaving(true);
     try {
-      await dispatch(updateProfile({ fullName: form.fullName, phone: form.phone, location: { city: form.city, country: form.country }, website: form.website, bio: form.bio })).unwrap();
+      await dispatch(updateProfile({ fullName: form.fullName, phone: form.phone, location: { city: form.city, country: form.country }, industry: form.industry, website: form.website, bio: form.bio })).unwrap();
 
       await axiosClient.post("/company", {
         name: form.companyName,
         description: form.bio,
         website: form.website,
+        industry: form.industry,
         location: [form.city, form.country].filter(Boolean).join(", "),
       });
 
@@ -137,7 +146,26 @@ export default function EmployerProfile() {
                 <div><label className={labelClass}>Phone</label><input name="phone" value={form.phone} onChange={hc} disabled={!editing} placeholder="+91 98765 43210" className={inputClass} /></div>
                 <div><label className={labelClass}>City</label><input name="city" value={form.city} onChange={hc} disabled={!editing} placeholder="e.g. Bangalore" className={inputClass} /></div>
                 <div><label className={labelClass}>Country</label><input name="country" value={form.country} onChange={hc} disabled={!editing} placeholder="e.g. India" className={inputClass} /></div>
-                <div><label className={labelClass}>Company Website</label><input name="website" value={form.website} onChange={hc} disabled={!editing} placeholder="https://example.com" className={inputClass} /></div>
+                <div>
+                  <label className={labelClass}>Industry</label>
+
+                  <select
+                    name="industry"
+                    value={form.industry}
+                    onChange={hc}
+                    disabled={!editing}
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-900 outline-none hover:border-violet-300 focus:border-violet-500 focus:bg-white dark:bg-white/5 dark:border-white/10 dark:text-white dark:hover:border-violet-500/50 dark:focus:border-violet-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="" disabled>Select Industry</option>
+                    <option value="IT Jobs">IT Jobs</option>
+                    <option value="Sales Jobs">Sales Jobs</option>
+                    <option value="Marketing Jobs">Marketing Jobs</option>
+                    <option value="Data Science Jobs">Data Science Jobs</option>
+                    <option value="HR Jobs">HR Jobs</option>
+                    <option value="Engineering Jobs">Engineering Jobs</option>
+                  </select>
+                </div>
+                <div><label className={labelClass}>Company Website</label><input name="website" value={form.website} onChange={hc} disabled={!editing} placeholder="https://example.com" className={inputClasslong} /></div>
               </div>
               <div>
                 <label className={labelClass}>Company Description / Bio</label>
